@@ -1,0 +1,17 @@
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\XMLParser.exe
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\XMLParser.deps.json
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\XMLParser.runtimeconfig.json
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\XMLParser.dll
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\XMLParser.pdb
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.AssemblyInfoInputs.cache
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.AssemblyInfo.cs
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.csproj.CoreCompileInputs.cache
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.dll
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\refint\XMLParser.dll
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.pdb
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.genruntimeconfig.cache
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\ref\XMLParser.dll
+C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\ICSharpCode.SharpZipLib.dll
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.csproj.AssemblyReference.cache
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.csproj.Up2Date
