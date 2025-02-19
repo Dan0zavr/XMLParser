@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Compression;
 using System.Linq.Expressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace XMLParser
 {
@@ -13,7 +14,6 @@ namespace XMLParser
         private readonly string tempReadPath = "C:\\Лабы\\AppTestDocx\\5 Лаба.docx";
         private readonly string tempWritePath = "C:\\Лабы\\AppTestDocx\\Arhive";
         private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        private List<string> file;
 
         private readonly string _readPath;
         private readonly string _writePath;
@@ -24,162 +24,50 @@ namespace XMLParser
             _readPath = tempReadPath;
             _writePath = tempWritePath;
             _tempFolder = tempFolder;
-            UnZipDocx();
-            file = SeparateXML(XMLDocumentFileToString());
-            StringToXMLDocument(DeleteExcess (file, SearchPageBreak(file)));
-            FilesInZip();
-        }
-
-        private string testString = "<></> <w:rPr></w:rPr><w:rPr> something!</w:rPr> ebg";
-
-        private string DeleteExcess(List<string> separatedString, int start)
-        {
-            List<string> separatedStringCopy = separatedString;
-
-            for (int i = start; i < separatedString.Count; i++) 
-            { 
-                if (separatedString[i][0] == '<')
+            try
+            {
+                UnZipDocx();
+                List<string> fileInTockens = Tokenize(XMLDocumentFileToString());
+                foreach (string file in fileInTockens)
                 {
-                    string ethalon = "<w:rPr>";
-                    for (int j = 0; j < 7; j++)
-                    {
-                        if (separatedString[i][j] == ethalon[j])
-                        {
-                            if (separatedString[i][j] == '>')
-                            {
-                                separatedStringCopy.Remove(separatedString[i]);
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
+                    Console.WriteLine(file);
                 }
             }
-
-            return ArrayToString(separatedStringCopy);
-
-        }
-
-        private int SearchPageBreak(List<string> strings)
-        {
-            for (int i = 0; i < strings.Count; i++)
+            finally
             {
-                if (strings[i][0] == '<')
-                {
-                    string ethalon = "<w:lastRenderedPageBreak/>";
-                    if (strings[i].Length >= ethalon.Length) {
-                        if (strings[i].Substring(0, ethalon.Length) == ethalon)
-                        {
-                            return i;
-                        }
-                    }
-                }
-            }
-            return -1;
-        }
-
-
-        private string ArrayToString(List<string> strings)
-        {
-            string newData = string.Empty;
-
-            foreach (string word in strings)
-            {
-                newData = newData + word;
+                Directory.Delete(_tempFolder, true);
             }
             
-            return newData;
         }
 
-        private List<string> SeparateXML(string fileInString)
+        public List<string> Tokenize(string file)
         {
-            List<string> textInBlocks = new List<string>();
-            int? startIndexToDelete;
-            int? endIndexToDelete = 0;
-            string finalXML = string.Empty;
+            List<string> tokens = new List<string>();
 
-            // Проход по документу
-            for(int i = 0; i < fileInString.Length; i++)
+            for (int i = 0; i < file.Length; i++)
             {
-                //Поиск открывающего тега
-                if (fileInString[i] == '<')
+                if(file[i] == '<') //поиск тега
                 {
-                    startIndexToDelete = i;
-                    string startHypothesis = "";
-                    while (fileInString[i] != '>')
+                    int end = file.IndexOf('>', i);
+                    if (end == -1) throw new Exception("Некорректный XML: незакрытый тег.");
+                    tokens.Add(file.Substring(i, end - i + 1));
+                    i = end;
+                }
+                else //поиск значения
+                {
+                    int end = file.IndexOf('<', i);
+                    if (end == -1) end = file.Length;
+
+                    string text = file.Substring(i, end - i).Trim();
+                    if (!string.IsNullOrEmpty(text))
                     {
-                        startHypothesis += fileInString[i];
-                        i++;
+                        tokens.Add(text);
                     }
-                    //Если открывающий тег найден, ищем закрывающий
-                    if (SearchStartIndexToDelete(startHypothesis + '>') == true)
-                    {
-                        if (textInBlocks.Count == 0)
-                        {
-                            textInBlocks.Add(fileInString.Substring(0, Convert.ToInt32(startIndexToDelete)));
-                        }
-                        else
-                        {
-                            textInBlocks.Add(fileInString.Substring(Convert.ToInt32(endIndexToDelete + 1), Convert.ToInt32(startIndexToDelete) - Convert.ToInt32(endIndexToDelete)-1));
-                           
-                        }
-
-                        for(int j = i; j < fileInString.Length; j++)
-                        {
-                            if (fileInString[j] == '<')
-                            {
-                                string endHypothesis = "";
-                                while (fileInString[j] != '>')
-                                {
-                                    endHypothesis += fileInString[j];
-                                    j++;
-                                }
-                                if(SearchEndIndexToDelete(endHypothesis + '>') == true)
-                                {
-                                    i = j;
-                                    endIndexToDelete = i;
-                                    int countToSeparate = Convert.ToInt32(endIndexToDelete) - Convert.ToInt32(startIndexToDelete) + 1;
-                                    textInBlocks.Add(fileInString.Substring(Convert.ToInt32(startIndexToDelete), countToSeparate));
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-
+                    i = end - 1;
                 }
             }
-            textInBlocks.Add(fileInString.Substring(Convert.ToInt32(endIndexToDelete), fileInString.Length - Convert.ToInt32(endIndexToDelete)));
-            return textInBlocks;
-        }
 
-        private bool SearchStartIndexToDelete(string hypotheticalString)
-        {
-            string openTeg = "<w:rPr>";
-            if (hypotheticalString == openTeg) 
-            { 
-                return true; 
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private bool SearchEndIndexToDelete(string hypotheticalString)
-        {
-            string closeTeg = "</w:rPr>";
-
-            if (hypotheticalString == closeTeg)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return tokens;
         }
 
         private void StringToXMLDocument(string text)
