@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO.Compression;
 using System.Linq.Expressions;
 using static System.Net.Mime.MediaTypeNames;
+using System.Xml;
 
 namespace XMLParser
 {
@@ -28,10 +29,12 @@ namespace XMLParser
             {
                 UnZipDocx();
                 List<string> fileInTockens = Tokenize(XMLDocumentFileToString());
-                foreach (string file in fileInTockens)
-                {
-                    Console.WriteLine(file);
-                }
+                List<TreeNode> parents = new List<TreeNode>();
+                TreeNode root = new TreeNode();
+                root = root.BuildTree(fileInTockens);
+                parents = root.BreadthFirstSearch(root, "w:rPr");
+                root.TerminateChildren(parents, "w:rPr");
+                root.PrintTree(root);
             }
             finally
             {
