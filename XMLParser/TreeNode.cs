@@ -11,8 +11,9 @@ namespace XMLParser
     public class TreeNode
     {
         public string TagName { get; set; }
+        public bool CloseTag { get; set; }
         public Dictionary<string, string> Attributes { get; set; } = new();
-        public List<string> Values { get; set; } = new(); // Список текстовых значений
+        public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
 
         public override string ToString()
@@ -83,8 +84,9 @@ namespace XMLParser
             {
                 if (token.EndsWith("/>")) // Самозакрывающийся тег
                 {
-                    string tagName = token.Substring(1, token.IndexOfAny(new[] { ' ', '>' }) - 1);
+                    string tagName = token.Substring(1, token.IndexOfAny(new[] { ' ', '/' }) - 1);
                     TreeNode treeNode = new TreeNode { TagName = tagName };
+                    treeNode.CloseTag = false;
 
                     // Обработка атрибутов
                     int start = token.IndexOf(' ');
@@ -114,6 +116,7 @@ namespace XMLParser
                     {
                         string tagName = token.Substring(1, token.IndexOfAny(new[] { ' ', '>' }) - 1);
                         TreeNode treeNode = new TreeNode { TagName = tagName };
+                        treeNode.CloseTag = true;
 
                         // Обработка атрибутов
                         int start = token.IndexOf(' ');

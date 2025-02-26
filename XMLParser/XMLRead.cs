@@ -28,13 +28,20 @@ namespace XMLParser
             try
             {
                 UnZipDocx();
-                List<string> fileInTockens = Tokenize(XMLDocumentFileToString());
+                var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString());
                 List<TreeNode> parents = new List<TreeNode>();
+                //for (int i = 0; i < fileInTockens.Count; i++)
+                //{
+                //    Console.WriteLine(fileInTockens[i]);
+                //}
                 TreeNode root = new TreeNode();
                 root = root.BuildTree(fileInTockens);
                 parents = root.BreadthFirstSearch(root, "w:rPr");
                 root.TerminateChildren(parents, "w:rPr");
-                root.PrintTree(root);
+                string serializedTree = SerializeNode(root, specialTokens);
+                StringToXMLDocument(serializedTree);
+                FilesInZip();
+                //root.PrintTree(root);
             }
             finally
             {
@@ -43,9 +50,54 @@ namespace XMLParser
             
         }
 
-        public List<string> Tokenize(string file)
+        public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
+        {
+            string node ="";
+            if (specialTokens != null)
+            {
+                foreach (var token in specialTokens)
+                {
+                    node += token;
+                }
+            }
+
+
+            // Создание открывающего тега
+            node = "<" + treeNode.TagName;
+            foreach (var attribute in treeNode.Attributes)
+            {
+                node += " " + attribute.Key + "=" + $"\"{attribute.Value}\"";
+            }
+
+            //Закрытие открывающего тега
+            if (treeNode.CloseTag == true)
+            {
+                node += ">";
+                //Дабавление значений
+                foreach (string value in treeNode.Values)
+                {
+                    node += value;
+                }
+                //Сериализация потомков
+                foreach (var child in treeNode.Children)
+                {
+                    node = node + SerializeNode(child);
+                }
+                node = node + $"</{treeNode.TagName}>";
+
+            }
+            else
+            {
+                node += "/>";
+            }
+
+            return node;
+        }
+
+        public (List<string> tokens, List<string> specialTokens) Tokenize(string file)
         {
             List<string> tokens = new List<string>();
+            List<string> specialTokens = new List<string>();
 
             for (int i = 0; i < file.Length; i++)
             {
@@ -53,15 +105,24 @@ namespace XMLParser
                 {
                     int end = file.IndexOf('>', i);
                     if (end == -1) throw new Exception("Некорректный XML: незакрытый тег.");
-                    tokens.Add(file.Substring(i, end - i + 1));
+                    string token = file.Substring(i, end - i + 1);
+                    if (token.StartsWith("<?"))
+                    {
+                        specialTokens.Add(token);
+                    }
+                    else
+                    {
+                        tokens.Add(token);
+                    }
                     i = end;
+                    
                 }
                 else //поиск значения
                 {
                     int end = file.IndexOf('<', i);
                     if (end == -1) end = file.Length;
 
-                    string text = file.Substring(i, end - i).Trim();
+                    string text = file.Substring(i, end - i);
                     if (!string.IsNullOrEmpty(text))
                     {
                         tokens.Add(text);
@@ -70,7 +131,7 @@ namespace XMLParser
                 }
             }
 
-            return tokens;
+            return (tokens, specialTokens);
         }
 
         private void StringToXMLDocument(string text)
@@ -96,7 +157,6 @@ namespace XMLParser
         {
             string savePath = _readPath.Replace("5 Лаба.docx", "5 Лаба1.docx");
             ZipFile.CreateFromDirectory(_tempFolder, savePath);
-            Directory.Delete(_tempFolder, true);
         }
     }
 }
