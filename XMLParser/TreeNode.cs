@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,9 +17,14 @@ namespace XMLParser
         public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
 
-        public override string ToString()
+        public enum TagsForSave
         {
-            return $"<{TagName}> (Атрибутов: {Attributes.Count}, Дочерних элементов: {Children.Count})";
+            [Description("w:b")] Bold,          // Жирный текст
+            [Description("w:i")] Italic,        // Курсивный текст
+            [Description("w:u")] Underline,     // Подчеркнутый текст
+            [Description("w:strike")] Strike,   // Зачеркнутый текст
+            [Description("w:color")] Color,     // Цвет текста
+            [Description("w:vertAlign")] VerticalAlignment // Верхний/нижний индекс
         }
 
         public TreeNode? CheckChild(TreeNode node, string tagName)
@@ -29,7 +35,7 @@ namespace XMLParser
                 {
                     if (child.TagName == tagName)
                     {
-                        return node;
+                        return child;
                     }
                 }
             }
@@ -38,7 +44,7 @@ namespace XMLParser
 
         public List<TreeNode> BreadthFirstSearch(TreeNode tree, string tagName)
         {
-            List<TreeNode> parents = new List<TreeNode>();
+            List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
             queue.Enqueue(tree);
 
@@ -47,7 +53,7 @@ namespace XMLParser
                 TreeNode currentNode = queue.Dequeue();
                 if (CheckChild(currentNode, tagName) != null)
                 {
-                    parents.Add(currentNode);
+                    tags.Add(CheckChild(currentNode, tagName));
                 }
                 else
                 {
@@ -58,16 +64,17 @@ namespace XMLParser
                 }
 
             }
-            return parents;
+            return tags;
         }
 
-        public void TerminateChildren(List<TreeNode> parents, string tagName)
+        public void TerminateChildren(List<TreeNode> tags)
         {
-            foreach (TreeNode currentNode in parents)
+            foreach (TreeNode currentNode in tags)
             {
-                for (int i = 0; i < currentNode.Children.Count; i++) 
+                int familySize = currentNode.Children.Count;
+                for (int i = familySize -1; i >= 0; i--) 
                 { 
-                    if(currentNode.Children[i].TagName == tagName)
+                    if(!Enum.IsDefined(typeof(TagsForSave), currentNode.Children[i].TagName))
                     {
                         currentNode.Children.RemoveAt(i);
                     }
@@ -164,6 +171,22 @@ namespace XMLParser
             }
 
             return root;
+        }
+
+        public void AddChildren(List<TreeNode> parents, List<TreeNode> children)
+        {
+            for(int i = 0; i < parents.Count; i++)
+            {
+                for (int j = 0; j < children.Count; j++) 
+                {
+                    AddChild(parents[i], children[j]);
+                }
+            }
+        }
+
+        public void AddChild(TreeNode parent, TreeNode child)
+        {
+            parent.Children.Add(child);
         }
 
         public void PrintTree(TreeNode node, int indent = 0)

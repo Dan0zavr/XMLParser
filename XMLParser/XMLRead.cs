@@ -16,38 +16,15 @@ namespace XMLParser
         private readonly string tempWritePath = "C:\\Лабы\\AppTestDocx\\Arhive";
         private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-        private readonly string _readPath;
-        private readonly string _writePath;
-        private readonly string _tempFolder;
+        public readonly string _readPath;
+        public readonly string _writePath;
+        public readonly string _tempFolder;
 
         public XMLRead()
         {
             _readPath = tempReadPath;
             _writePath = tempWritePath;
             _tempFolder = tempFolder;
-            try
-            {
-                UnZipDocx();
-                var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString());
-                List<TreeNode> parents = new List<TreeNode>();
-                //for (int i = 0; i < fileInTockens.Count; i++)
-                //{
-                //    Console.WriteLine(fileInTockens[i]);
-                //}
-                TreeNode root = new TreeNode();
-                root = root.BuildTree(fileInTockens);
-                parents = root.BreadthFirstSearch(root, "w:rPr");
-                root.TerminateChildren(parents, "w:rPr");
-                string serializedTree = SerializeNode(root, specialTokens);
-                StringToXMLDocument(serializedTree);
-                FilesInZip();
-                //root.PrintTree(root);
-            }
-            finally
-            {
-                Directory.Delete(_tempFolder, true);
-            }
-            
         }
 
         public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
@@ -134,26 +111,26 @@ namespace XMLParser
             return (tokens, specialTokens);
         }
 
-        private void StringToXMLDocument(string text)
+        public void StringToXMLDocument(string text, string endFile)
         {
-            string doc = _tempFolder + "\\word\\document.xml";
+            string doc = _tempFolder + $"\\word\\{endFile}";
             File.WriteAllText(doc, text);
         }
 
-        private string XMLDocumentFileToString()
+        public string XMLDocumentFileToString(string endFile)
         {
-            string doc = _tempFolder + "\\word\\document.xml";
+            string doc = _tempFolder + $"\\word\\{endFile}";
             string list = File.ReadAllText(doc);
             return list;
         }
 
-        private void UnZipDocx()
+        public void UnZipDocx()
         {
             Directory.CreateDirectory(_tempFolder);
             ZipFile.ExtractToDirectory(_readPath, _tempFolder);
         }
 
-        private void FilesInZip()
+        public void FilesInZip()
         {
             string savePath = _readPath.Replace("5 Лаба.docx", "5 Лаба1.docx");
             ZipFile.CreateFromDirectory(_tempFolder, savePath);

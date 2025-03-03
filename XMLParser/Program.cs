@@ -1,8 +1,9 @@
 ﻿
 using XMLParser;
 
-XMLRead newParser = new XMLRead();
+XMLRead xMLRead = new XMLRead();
+TextStyle style = new TextStyle();
 
-
+ParseManager parser = new ParseManager(xMLRead, style);
 
 return 0;
