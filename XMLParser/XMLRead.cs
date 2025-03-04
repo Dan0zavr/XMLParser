@@ -12,20 +12,6 @@ namespace XMLParser
 {
     public class XMLRead
     {
-        private readonly string tempReadPath = "C:\\Лабы\\AppTestDocx\\5 Лаба.docx";
-        private readonly string tempWritePath = "C:\\Лабы\\AppTestDocx\\Arhive";
-        private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-        public readonly string _readPath;
-        public readonly string _writePath;
-        public readonly string _tempFolder;
-
-        public XMLRead()
-        {
-            _readPath = tempReadPath;
-            _writePath = tempWritePath;
-            _tempFolder = tempFolder;
-        }
 
         public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
         {
@@ -111,29 +97,73 @@ namespace XMLParser
             return (tokens, specialTokens);
         }
 
-        public void StringToXMLDocument(string text, string endFile)
+        public void StringToXMLDocument(string text, string fileName, string tempFolder)
         {
-            string doc = _tempFolder + $"\\word\\{endFile}";
+            string doc = tempFolder + $"\\word\\{fileName}";
             File.WriteAllText(doc, text);
         }
 
-        public string XMLDocumentFileToString(string endFile)
+        public string XMLDocumentFileToString(string endFile, string tempFolder)
         {
-            string doc = _tempFolder + $"\\word\\{endFile}";
+            string doc = tempFolder + $"\\word\\{endFile}";
             string list = File.ReadAllText(doc);
             return list;
         }
 
-        public void UnZipDocx()
+        public void UnZipDocx( string readPath, string tempFolder)
         {
-            Directory.CreateDirectory(_tempFolder);
-            ZipFile.ExtractToDirectory(_readPath, _tempFolder);
+            Directory.CreateDirectory(tempFolder);
+            ZipFile.ExtractToDirectory(readPath, tempFolder);
         }
 
-        public void FilesInZip()
+        public void FilesInZip(string readPath, string tempFolder, string oldFileName, string savePath)
         {
-            string savePath = _readPath.Replace("5 Лаба.docx", "5 Лаба1.docx");
-            ZipFile.CreateFromDirectory(_tempFolder, savePath);
+            string fileName = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
+            string savePathWithFile = savePath.Replace(oldFileName, fileName);
+            ZipFile.CreateFromDirectory(tempFolder, savePathWithFile);
         }
+
+        private string ExtractExtension(string fileName)
+        {
+            string newFileName;
+            if (fileName.Contains("."))
+            {
+                newFileName = fileName.Remove(fileName.IndexOf('.'));
+                return newFileName;
+            }
+            return fileName;
+        }
+
+        private string EnsureUniqueFileName(string fileName, string savePath) 
+        {
+            string newFileName = ExtractExtension(fileName);
+            int counter = 1;
+            while (File.Exists(savePath + "\\" + newFileName + ".docx"))
+            {
+                newFileName = newFileName + counter;
+                counter++;
+            }
+            newFileName += ".docx";
+            return newFileName;
+        }
+
+        //public string EnsureUniqStyleName(TreeNode root, string tag)
+        //{
+        //    string baseName = "WordRegStyle"; // Базовое имя стиля
+        //    string styleName = baseName; // Начинаем с базового имени
+        //    int counter = 1; // Счетчик для добавления суффикса
+
+        //    // Поиск всех узлов с указанным тегом
+        //    List<TreeNode> styles = BreadthFirstSearch(root, tag);
+
+        //    // Проверяем, используется ли имя стиля
+        //    while (styles.Any(node => node.Attributes.ContainsValue(styleName)))
+        //    {
+        //        // Если имя уже используется, добавляем суффикс
+        //        styleName = $"{baseName}_{counter++}";
+        //    }
+
+        //    return styleName; // Возвращаем уникальное имя
+        //}
     }
 }

@@ -50,7 +50,7 @@ namespace XMLParser
                 Attributes = 
                 { 
                     {"w:type", "character" },
-                    {"w:styleId", "WordRegTextStyle" }
+                    {"w:styleId", $"{EnsureUniqueStyleName}" }
                 },
                 Children = styleChildren,
                 CloseTag = true
@@ -61,11 +61,28 @@ namespace XMLParser
             return styleNode;
         }
 
-
-
-        public void InroduceStyleInFile(TreeNode stylesNodeParent, TreeNode styleChilld)
+        public void InroduceStyleInTree(TreeNode stylesNodeParent, TreeNode styleChilld)
         {
              AddChild(stylesNodeParent, styleChilld);
+        }
+
+        public string EnsureUniqueStyleName(TreeNode root, string tag)
+        {
+            string baseName = "WordRegStyle"; // Базовое имя стиля
+            string styleName = baseName; // Начинаем с базового имени
+            int counter = 1; // Счетчик для добавления суффикса
+
+            // Поиск всех узлов с указанным тегом
+            List<TreeNode> styles = BreadthFirstSearch(root, tag);
+
+            // Проверяем, используется ли имя стиля
+            while (styles.Any(node => node.Attributes.ContainsValue(styleName)))
+            {
+                // Если имя уже используется, добавляем суффикс
+                styleName = $"{baseName}_{counter++}";
+            }
+
+            return styleName; // Возвращаем уникальное имя
         }
     }
 }

@@ -17,15 +17,7 @@ namespace XMLParser
         public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
 
-        public enum TagsForSave
-        {
-            [Description("w:b")] Bold,          // Жирный текст
-            [Description("w:i")] Italic,        // Курсивный текст
-            [Description("w:u")] Underline,     // Подчеркнутый текст
-            [Description("w:strike")] Strike,   // Зачеркнутый текст
-            [Description("w:color")] Color,     // Цвет текста
-            [Description("w:vertAlign")] VerticalAlignment // Верхний/нижний индекс
-        }
+        public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign" };
 
         public TreeNode? CheckChild(TreeNode node, string tagName)
         {
@@ -71,10 +63,12 @@ namespace XMLParser
         {
             foreach (TreeNode currentNode in tags)
             {
-                int familySize = currentNode.Children.Count;
-                for (int i = familySize -1; i >= 0; i--) 
-                { 
-                    if(!Enum.IsDefined(typeof(TagsForSave), currentNode.Children[i].TagName))
+                // Проходим по детям в обратном порядке, чтобы избежать проблем с удалением элементов
+                for (int i = currentNode.Children.Count - 1; i >= 0; i--)
+                {
+                    TreeNode childNode = currentNode.Children[i];
+                    // Проверяем, совпадает ли имя тега с любым из TagForSave
+                    if (!TagsForSave.Contains(childNode.TagName))
                     {
                         currentNode.Children.RemoveAt(i);
                     }

@@ -17,6 +17,10 @@ namespace XMLParser
         private const string document = "document.xml";
         private const string styles = "styles.xml";
 
+        private readonly string tempReadPath = "C:\\Лабы\\AppTestDocx\\5 Лаба.docx";
+        private readonly string tempWritePath = "C:\\Лабы\\AppTestDocx\\Arhive";
+        private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
         public ParseManager(XMLRead xmlRead, TextStyle textStyle)
         {
             _xmlRead = xmlRead; 
@@ -24,27 +28,37 @@ namespace XMLParser
 
             try
             {
-                CleanHandTextStyles(_xmlRead, _style);
+                CleanHandTextStyles(_xmlRead, tempReadPath, tempReadPath);
             }
             finally
             {
-                Directory.Delete(xmlRead._tempFolder, true);
+                Directory.Delete(tempFolder, true);
             }
 
            
         }
-        private void CleanHandTextStyles(XMLRead xmlRead, TextStyle textStyle)
+        private void CleanHandTextStyles(XMLRead xmlRead, string readPath, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
             TreeNode root = new TreeNode();
-            xmlRead.UnZipDocx();
-            var (fileInTockens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(document));
+            xmlRead.UnZipDocx(readPath, tempFolder);
+            var (fileInTockens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(document, tempFolder));
             root = root.BuildTree(fileInTockens);
             foundedParents = root.BreadthFirstSearch(root, "w:rPr");
             root.TerminateChildren(foundedParents);
             string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, document);
-            xmlRead.FilesInZip();
+            xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
+            xmlRead.FilesInZip(readPath, tempFolder, ExtractFileNameFromPath(readPath), savePath);
+        }
+
+        private string ExtractFileNameFromPath(string path)
+        {
+            return Path.GetFileName(path);
+        }
+
+        private void CreateTextStyle(XMLRead xmlRead, TextStyle textStyle)
+        {
+
         }
 
     }
