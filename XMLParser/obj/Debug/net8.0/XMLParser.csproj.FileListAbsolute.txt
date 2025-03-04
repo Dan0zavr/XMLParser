@@ -15,3 +15,4 @@ C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\ref\XMLParser.d
 C:\Users\Haier\source\repos\XMLParser\XMLParser\bin\Debug\net8.0\ICSharpCode.SharpZipLib.dll
 C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.csproj.AssemblyReference.cache
 C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.csproj.Up2Date
+C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0\XMLParser.sourcelink.json

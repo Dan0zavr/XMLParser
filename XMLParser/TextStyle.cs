@@ -13,8 +13,6 @@ namespace XMLParser
         public string FontName { get; set; }
         public int FontSize { get; set; }
 
-        const string fileName = "styles.xml";
-
         public List<TreeNode> CreateTextStyle(TextStyle styleToTree) 
         { 
             List<TreeNode> style = new List<TreeNode>();
@@ -25,16 +23,16 @@ namespace XMLParser
                 {
                     case "FontName":
                         styleNode.TagName = "w:rFonts";
-                        styleNode.Attributes.Add("w:ascii", FontName);
-                        styleNode.Attributes.Add("w:hAnsi", FontName);
-                        styleNode.Attributes.Add("w:cs", FontName);
+                        styleNode.Attributes.Add("w:ascii", styleToTree.FontName);
+                        styleNode.Attributes.Add("w:hAnsi", styleToTree.FontName);
+                        styleNode.Attributes.Add("w:cs", styleToTree.FontName);
                         style.Add(styleNode);
                         break;
 
                     case "FontSize":
                         styleNode.TagName = "w:sz";
-                        FontSize = FontSize * 2;
-                        styleNode.Attributes.Add("w:val", FontSize.ToString());
+                        styleToTree.FontSize = styleToTree.FontSize * 2;
+                        styleNode.Attributes.Add("w:val", styleToTree.FontSize.ToString());
                         style.Add(styleNode);
                         break;
                 }
@@ -42,21 +40,39 @@ namespace XMLParser
             return style;
         }
 
-        public TreeNode CreateTextStyleNode(List<TreeNode> styleChildren)
+        public TreeNode CreateTextStyleNode(List<TreeNode> styleChildren, TreeNode root, string tag)
         {
+            string styleName = EnsureUniqueStyleName(root, tag);
+            TreeNode styleIdAndName = new TreeNode()
+            {
+                TagName = $"w:name",
+                Attributes = { {"w:val", styleName} },
+                CloseTag = false
+            };
+
+            TreeNode rPr = new TreeNode()
+            {
+                TagName = "w:rPr",
+                Children = styleChildren,
+                CloseTag = true
+            };
+
+            List<TreeNode> textParent = new List<TreeNode>();
+            List<TreeNode> name = new List<TreeNode>();
+            textParent.Add(rPr);
+            name.Add(styleIdAndName);
+
             TreeNode styleNode = new TreeNode()
             {
                 TagName = "w:style",
                 Attributes = 
                 { 
                     {"w:type", "character" },
-                    {"w:styleId", $"{EnsureUniqueStyleName}" }
+                    {"w:styleId", styleName }
                 },
-                Children = styleChildren,
+                Children = name.Union(textParent).ToList(),
                 CloseTag = true
             };
-
-            
 
             return styleNode;
         }
@@ -66,7 +82,7 @@ namespace XMLParser
              AddChild(stylesNodeParent, styleChilld);
         }
 
-        public string EnsureUniqueStyleName(TreeNode root, string tag)
+        private string EnsureUniqueStyleName(TreeNode root, string tag)
         {
             string baseName = "WordRegStyle"; // Базовое имя стиля
             string styleName = baseName; // Начинаем с базового имени

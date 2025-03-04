@@ -119,7 +119,7 @@ namespace XMLParser
         public void FilesInZip(string readPath, string tempFolder, string oldFileName, string savePath)
         {
             string fileName = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
-            string savePathWithFile = savePath.Replace(oldFileName, fileName);
+            string savePathWithFile = savePath + "\\" + fileName;
             ZipFile.CreateFromDirectory(tempFolder, savePathWithFile);
         }
 
@@ -146,24 +146,5 @@ namespace XMLParser
             newFileName += ".docx";
             return newFileName;
         }
-
-        //public string EnsureUniqStyleName(TreeNode root, string tag)
-        //{
-        //    string baseName = "WordRegStyle"; // Базовое имя стиля
-        //    string styleName = baseName; // Начинаем с базового имени
-        //    int counter = 1; // Счетчик для добавления суффикса
-
-        //    // Поиск всех узлов с указанным тегом
-        //    List<TreeNode> styles = BreadthFirstSearch(root, tag);
-
-        //    // Проверяем, используется ли имя стиля
-        //    while (styles.Any(node => node.Attributes.ContainsValue(styleName)))
-        //    {
-        //        // Если имя уже используется, добавляем суффикс
-        //        styleName = $"{baseName}_{counter++}";
-        //    }
-
-        //    return styleName; // Возвращаем уникальное имя
-        //}
     }
 }

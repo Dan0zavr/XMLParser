@@ -18,8 +18,13 @@ namespace XMLParser
         private const string styles = "styles.xml";
 
         private readonly string tempReadPath = "C:\\Лабы\\AppTestDocx\\5 Лаба.docx";
-        private readonly string tempWritePath = "C:\\Лабы\\AppTestDocx\\Arhive";
+        private readonly string tempSavePath = "C:\\Лабы\\AppTestDocx";
         private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        private TextStyle testStyle = new TextStyle()
+        {
+            FontName = "Times New Roman",
+            FontSize = 14
+        };
 
         public ParseManager(XMLRead xmlRead, TextStyle textStyle)
         {
@@ -28,7 +33,8 @@ namespace XMLParser
 
             try
             {
-                CleanHandTextStyles(_xmlRead, tempReadPath, tempReadPath);
+                CleanHandTextStyles(_xmlRead, tempReadPath, tempSavePath);
+                CreateTextStyleInFile(_xmlRead, _style, tempReadPath, tempSavePath);
             }
             finally
             {
@@ -46,9 +52,9 @@ namespace XMLParser
             root = root.BuildTree(fileInTockens);
             foundedParents = root.BreadthFirstSearch(root, "w:rPr");
             root.TerminateChildren(foundedParents);
+
             string serializedTree = xmlRead.SerializeNode(root, specialTokens);
             xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
-            xmlRead.FilesInZip(readPath, tempFolder, ExtractFileNameFromPath(readPath), savePath);
         }
 
         private string ExtractFileNameFromPath(string path)
@@ -56,9 +62,19 @@ namespace XMLParser
             return Path.GetFileName(path);
         }
 
-        private void CreateTextStyle(XMLRead xmlRead, TextStyle textStyle)
+        private void CreateTextStyleInFile(XMLRead xmlRead, TextStyle textStyle, string readPath, string savePath)
         {
+            TreeNode root = new TreeNode();
+            TreeNode styleNode = new TreeNode();
+            var (fileInTokens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(styles, tempFolder));
+            root = root.BuildTree(fileInTokens);
 
+            styleNode = textStyle.CreateTextStyleNode(textStyle.CreateTextStyle(testStyle), root, "w:style");
+            textStyle.InroduceStyleInTree(root, styleNode);
+
+            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
+            xmlRead.StringToXMLDocument(serializedTree, styles, tempFolder);
+            xmlRead.FilesInZip(readPath, tempFolder, ExtractFileNameFromPath(readPath), savePath);
         }
 
     }
