@@ -33,8 +33,11 @@ namespace XMLParser
 
             try
             {
+                xmlRead.UnZipDocx(tempReadPath, tempFolder);
                 CleanHandTextStyles(_xmlRead, tempReadPath, tempSavePath);
-                CreateTextStyleInFile(_xmlRead, _style, tempReadPath, tempSavePath);
+                TreeNode styleNode = CreateTextStyleInFile(_xmlRead, _style, tempReadPath, tempSavePath);
+                ApplyTextStyle(styleNode, _xmlRead, tempReadPath);
+                xmlRead.FilesInZip(tempReadPath, tempFolder, ExtractFileNameFromPath(tempReadPath), tempSavePath);
             }
             finally
             {
@@ -46,10 +49,9 @@ namespace XMLParser
         private void CleanHandTextStyles(XMLRead xmlRead, string readPath, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
-            TreeNode root = new TreeNode();
-            xmlRead.UnZipDocx(readPath, tempFolder);
-            var (fileInTockens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(document, tempFolder));
-            root = root.BuildTree(fileInTockens);
+
+            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, document);
+            
             foundedParents = root.BreadthFirstSearch(root, "w:rPr");
             root.TerminateChildren(foundedParents);
 
@@ -62,19 +64,48 @@ namespace XMLParser
             return Path.GetFileName(path);
         }
 
-        private void CreateTextStyleInFile(XMLRead xmlRead, TextStyle textStyle, string readPath, string savePath)
+        private TreeNode CreateTextStyleInFile(XMLRead xmlRead, TextStyle textStyle, string readPath, string savePath)
         {
-            TreeNode root = new TreeNode();
             TreeNode styleNode = new TreeNode();
-            var (fileInTokens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(styles, tempFolder));
-            root = root.BuildTree(fileInTokens);
+
+            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, styles);
 
             styleNode = textStyle.CreateTextStyleNode(textStyle.CreateTextStyle(testStyle), root, "w:style");
             textStyle.InroduceStyleInTree(root, styleNode);
 
             string serializedTree = xmlRead.SerializeNode(root, specialTokens);
             xmlRead.StringToXMLDocument(serializedTree, styles, tempFolder);
-            xmlRead.FilesInZip(readPath, tempFolder, ExtractFileNameFromPath(readPath), savePath);
+            return styleNode;
+        }
+
+        private void ApplyTextStyle(TreeNode style, XMLRead xmlRead, string readPath)
+        {
+            string styleName = style.Attributes["w:styleId"];
+            TreeNode styleToApply = new TreeNode()
+            {
+                TagName = "w:rStyle",
+                Attributes = { { "w:val", styleName } },
+                CloseTag = false
+            };
+
+            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, document);
+
+            List<TreeNode> foundedParents = new List<TreeNode>();
+            foundedParents = root.BreadthFirstSearch(root, "w:rPr");
+            for (int i = 0; i < foundedParents.Count; i++) 
+            {
+                root.AddChild(foundedParents[i], styleToApply);
+            }
+            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
+            xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
+        }
+
+        private (TreeNode root, List<string> specialTokens) ReadXMLDocument(XMLRead xmlRead, string readPath, string fileName)
+        {
+            TreeNode root = new TreeNode();
+            var (fileInTockens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(fileName, tempFolder));
+            root = root.BuildTree(fileInTockens);
+            return (root, specialTokens);
         }
 
     }

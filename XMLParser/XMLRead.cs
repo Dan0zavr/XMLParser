@@ -110,7 +110,7 @@ namespace XMLParser
             return list;
         }
 
-        public void UnZipDocx( string readPath, string tempFolder)
+        public void UnZipDocx(string readPath, string tempFolder)
         {
             Directory.CreateDirectory(tempFolder);
             ZipFile.ExtractToDirectory(readPath, tempFolder);
