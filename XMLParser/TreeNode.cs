@@ -17,7 +17,7 @@ namespace XMLParser
         public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
 
-        public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign" };
+        public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign", "w:rPr", "w:numPr" };
 
         public TreeNode? CheckChild(TreeNode node, string tagName)
         {
@@ -34,7 +34,7 @@ namespace XMLParser
             return null;
         }
 
-        public List<TreeNode> BreadthFirstSearch(TreeNode tree, string tagName)
+        public List<TreeNode> QuikBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
@@ -55,6 +55,27 @@ namespace XMLParser
                     }
                 }
 
+            }
+            return tags;
+        }
+
+        public List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
+        {
+            List<TreeNode> tags = new List<TreeNode>();
+            Queue <TreeNode> queue = new Queue<TreeNode>();
+            queue.Enqueue(tree);
+
+            while (queue.Count > 0) 
+            {
+                TreeNode currentNode = queue.Dequeue();
+                foreach (TreeNode child in currentNode.Children)
+                {
+                    if(child.TagName == tagName)
+                    {
+                        tags.Add(child);
+                    }
+                    queue.Enqueue(child);
+                }
             }
             return tags;
         }

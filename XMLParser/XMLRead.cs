@@ -118,9 +118,12 @@ namespace XMLParser
 
         public void FilesInZip(string readPath, string tempFolder, string oldFileName, string savePath)
         {
-            string fileName = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
-            string savePathWithFile = savePath + "\\" + fileName;
-            ZipFile.CreateFromDirectory(tempFolder, savePathWithFile);
+            string fileNameDocx = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
+            string fileNameZip = fileNameDocx.Replace(".docx", ".zip");
+            string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
+            string saxePathWithFileZip = savePath + "\\" + fileNameZip;
+            ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx);
+            ZipFile.CreateFromDirectory(tempFolder, saxePathWithFileZip);
         }
 
         private string ExtractExtension(string fileName)

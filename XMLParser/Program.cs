@@ -2,8 +2,8 @@
 using XMLParser;
 
 XMLRead xMLRead = new XMLRead();
-TextStyle style = new TextStyle();
+StyleCreator creator = new StyleCreator();
 
-ParseManager parser = new ParseManager(xMLRead, style);
+ParseManager parser = new ParseManager(xMLRead, creator);
 
 return 0;
