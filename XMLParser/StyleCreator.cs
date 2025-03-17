@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.Styles;
 
 namespace XMLParser
 {
     public class StyleCreator : TreeNode
     {
-        public TreeNode CreateTextAndParagraphStyleNode(string styleType, List<TreeNode> styleChildren, TreeNode root)
+        public TreeNode CreateTextAndParagraphStyleNode(IStyle style, List<TreeNode> styleChildren, TreeNode root)
         {
             string tagName = "";
+            string styleType = "";
             string styleName = EnsureUniqueStyleName(root, "w:style", "WordRegStyle");
             //Формирование тега для имени стиля
             TreeNode styleIdAndName = new TreeNode()
@@ -20,16 +22,15 @@ namespace XMLParser
                 CloseTag = false
             };
 
-            switch(styleType)
+            if (style is TextStyle)
             {
-                case "character":
-                    tagName = "w:rPr";
-                    break;
-
-                case "paragraph":
-                    tagName = "w:pPr";
-                    break;
-
+                tagName = "w:rPr";
+                styleType = "character";
+            }
+            else if (style is ParagraphStyle)
+            {
+                tagName = "w:pPr";
+                styleType = "paragraph";
             }
             //Формирование тега, содержащего параметры стиля
             TreeNode parent = new TreeNode()
@@ -97,6 +98,33 @@ namespace XMLParser
             };
 
             return (mainStyleNode, appliedStyle);
+        }
+
+        public TreeNode CreateTableStyleNode(List<TreeNode> tableStyle, TreeNode root)
+        {
+            string tableName = EnsureUniqueStyleName(root, "w:style", "WordRegTableStyle");
+            TreeNode tableNameNode = new TreeNode()
+            {
+                TagName = "w:name",
+                Attributes = { {"w:val",  tableName} }
+            };
+            
+            TreeNode style = new TreeNode()
+            {
+                TagName = "w:style",
+                Attributes = { {"w:type", "table"}, {"w:styleId", tableName} },
+                Children = new List<TreeNode>(),
+                CloseTag = true
+            };
+
+            style.Children.Add(tableNameNode);
+
+            foreach (TreeNode childNode in tableStyle) 
+            { 
+                style.Children.Add(childNode);
+            }
+
+            return style;
         }
 
         public void InroduceStyleInTree(TreeNode stylesNodeParent, TreeNode styleChilld)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XMLParser
+namespace XMLParser.Styles
 {
     public class NumberingStyle : TreeNode, IStyle
     {
@@ -22,7 +22,7 @@ namespace XMLParser
         }
 
         public int Levels { get; set; } = 1;
-        public NumberingFormat NumberingType {  get; set; }
+        public NumberingFormat NumberingType { get; set; }
         public string Marker { get; set; }
         public double? FirstLineIndent { get; set; } = 0;
         public double? LeftIndent { get; set; } = 0;

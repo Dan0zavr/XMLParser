@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -13,7 +14,7 @@ namespace XMLParser.Styles
 
         public string StyleType => "ParagraphStyle";
 
-        public string Allingnment { get; set; }
+        public string Alingnment { get; set; }
         public double? FirstLineIndent { get; set; } = 0;
         public double? LeftIndent { get; set; } = 0;
         public double? RightIndent { get; set; } = 0;
@@ -31,10 +32,10 @@ namespace XMLParser.Styles
                 TreeNode styleNode = new TreeNode();
                 switch (prop.Name)
                 {
-                    case "Allingnment":
+                    case "Alingnment":
 
                         styleNode.TagName = "w:jc";
-                        styleNode.Attributes.Add("w:val", paragraphStyle.Allingnment);
+                        styleNode.Attributes.Add("w:val", paragraphStyle.Alingnment);
                         style.Add(styleNode);
                         break;
 
@@ -43,18 +44,17 @@ namespace XMLParser.Styles
                         string twipsInString;
 
                         twips = paragraphStyle.FirstLineIndent.Value * twipsToSantimetr;
-                        twipsInString = $"{twips}";
-                        twipsInString = twipsInString.Replace(',', '.');
+
+                        twipsInString = twips.ToString(CultureInfo.InvariantCulture);
+
                         styleNode.Attributes.Add("w:firstLine", twipsInString);
 
                         twips = paragraphStyle.RightIndent.Value * twipsToSantimetr;
-                        twipsInString = $"{twips}";
-                        twipsInString = twipsInString.Replace(',', '.');
+                        twipsInString = twips.ToString(CultureInfo.InvariantCulture);
                         styleNode.Attributes.Add("w:right", twipsInString);
 
                         twips = paragraphStyle.LeftIndent.Value * twipsToSantimetr;
-                        twipsInString = $"{twips}";
-                        twipsInString = twipsInString.Replace(',', '.');
+                        twipsInString = twips.ToString(CultureInfo.InvariantCulture);
                         styleNode.Attributes.Add("w:left", twipsInString);
 
                         style.Add(styleNode);

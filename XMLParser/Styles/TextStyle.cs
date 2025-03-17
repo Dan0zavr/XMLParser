@@ -5,9 +5,8 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
-using XMLParser.Styles;
 
-namespace XMLParser
+namespace XMLParser.Styles
 {
     public class TextStyle : TreeNode, IStyle
     {
@@ -15,13 +14,13 @@ namespace XMLParser
         public string FontName { get; set; }
         public int FontSize { get; set; }
 
-        public List<TreeNode> CreateTextStyle(TextStyle styleToTree) 
-        { 
+        public List<TreeNode> CreateTextStyle(TextStyle styleToTree)
+        {
             List<TreeNode> style = new List<TreeNode>();
-            foreach(var prop in typeof(TextStyle).GetProperties())
+            foreach (var prop in typeof(TextStyle).GetProperties())
             {
                 TreeNode styleNode = new TreeNode();
-                switch (prop.Name) 
+                switch (prop.Name)
                 {
                     case "FontName":
                         styleNode.TagName = "w:rFonts";

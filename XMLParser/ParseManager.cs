@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Xml;
+using XMLParser.Styles;
 
 namespace XMLParser
 {
@@ -31,7 +32,7 @@ namespace XMLParser
 
         private ParagraphStyle paragraphStyle = new ParagraphStyle()
         {
-            Allingnment = "both",
+            Alingnment = "both",
             IntervalInText = 360,
             FirstLineIndent = 1.25
         };
@@ -41,6 +42,14 @@ namespace XMLParser
             Levels = 1,
             NumberingType = NumberingStyle.NumberingFormat.Bullet,
             Marker = "•"
+        };
+
+        private TableStyle tableStyle = new TableStyle()
+        {
+            MinCellHeight = 453,
+            VerticalAlignment = "center",
+            BorderThilness = 10
+
         };
 
         public ParseManager(XMLRead xmlRead, StyleCreator creator)
@@ -53,16 +62,22 @@ namespace XMLParser
                 xmlRead.UnZipDocx(tempReadPath, tempFolder);
                 CleanHandStyles(_xmlRead, tempReadPath, tempSavePath);
 
-                TreeNode paragraphStyleNode = CreateStyleInFile(_xmlRead, paragraphStyle, tempReadPath, tempSavePath, "paragraph");
-                ApplyTextAndParagraphStyle(paragraphStyleNode, _xmlRead, tempReadPath, "paragraph");
+                var (root, specialTokens) = ReadXMLDocument(xmlRead, tempReadPath, styles);
+
+                (TreeNode paragraphStyleNode, root) = CreateStyleInFile(_xmlRead, paragraphStyle, tempReadPath, tempSavePath, root, specialTokens);
+                ApplyStyle(paragraphStyleNode, _xmlRead, tempReadPath, "paragraph");
                 CorrectParagraphChildren("w:pPr", _xmlRead, tempReadPath);
 
-                TreeNode textStyleNode = CreateStyleInFile(_xmlRead, textStyle, tempReadPath, tempSavePath, "character");
-                ApplyTextAndParagraphStyle(textStyleNode, _xmlRead, tempReadPath, "character");
+                (TreeNode textStyleNode, root) = CreateStyleInFile(_xmlRead, textStyle, tempReadPath, tempSavePath, root, specialTokens);
+                ApplyStyle(textStyleNode, _xmlRead, tempReadPath, "character");
+
+                (TreeNode tableStyleNode, root) = CreateStyleInFile(_xmlRead, tableStyle, tempReadPath, tempSavePath, root, specialTokens);
+                ApplyStyle(tableStyleNode, _xmlRead, tempReadPath, "table");
 
                 var (numberingStyleNode, appliedStyle) = CreateNumberingStyleInFile(_xmlRead, numberingStyle, tempReadPath, tempSavePath);
                 ApplyNumberingStyle(appliedStyle, _xmlRead, tempReadPath, numberingStyle.Levels);
 
+                SerializeStyle(xmlRead, root, specialTokens);
 
                 xmlRead.FilesInZip(tempReadPath, tempFolder, ExtractFileNameFromPath(tempReadPath), tempSavePath);
             }
@@ -85,6 +100,8 @@ namespace XMLParser
             root.TerminateChildren(foundedParents);
             foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
             root.TerminateChildren(foundedParents);
+            foundedParents = root.QuikBreadthFirstSearch(root, "w:tblPr");
+            root.TerminateChildren(foundedParents);
 
             string serializedTree = xmlRead.SerializeNode(root, specialTokens);
             xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
@@ -95,25 +112,31 @@ namespace XMLParser
             return Path.GetFileName(path);
         }
 
-        private TreeNode CreateStyleInFile(XMLRead xmlRead, IStyle style, string readPath, string savePath, string styleType)
+        private (TreeNode, TreeNode) CreateStyleInFile(XMLRead xmlRead, IStyle style, string readPath, string savePath, TreeNode root, List<string> specialTokens)
         {
             TreeNode styleNode = new TreeNode();
 
-            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, styles);
-
             if (style is TextStyle textStyle)
             {
-                styleNode = _creator.CreateTextAndParagraphStyleNode(styleType, textStyle.CreateTextStyle(textStyle), root);
+                styleNode = _creator.CreateTextAndParagraphStyleNode(style, textStyle.CreateTextStyle(textStyle), root);
             }
             else if (style is ParagraphStyle paragraphStyle)
             {
-                styleNode = _creator.CreateTextAndParagraphStyleNode(styleType, paragraphStyle.CreateParagraphStyle(paragraphStyle), root);
+                styleNode = _creator.CreateTextAndParagraphStyleNode(style, paragraphStyle.CreateParagraphStyle(paragraphStyle), root);
+            }
+            else if (style is TableStyle tableStyle)
+            {
+                styleNode = _creator.CreateTableStyleNode(tableStyle.CreateTableStyle(tableStyle, "test" , "test", root);
             }
             _creator.InroduceStyleInTree(root, styleNode);
 
+            return (styleNode, root);
+        }
+
+        private void SerializeStyle(XMLRead xmlRead, TreeNode root, List<string> specialTokens)
+        {
             string serializedTree = xmlRead.SerializeNode(root, specialTokens);
             xmlRead.StringToXMLDocument(serializedTree, styles, tempFolder);
-            return styleNode;
         }
 
         private (TreeNode, TreeNode) CreateNumberingStyleInFile(XMLRead xmlRead, NumberingStyle style, string readPath, string savePath)
@@ -162,7 +185,7 @@ namespace XMLParser
             xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
 
         }
-        private void ApplyTextAndParagraphStyle(TreeNode style, XMLRead xmlRead, string readPath, string styleType)
+        private void ApplyStyle(TreeNode style, XMLRead xmlRead, string readPath, string styleType)
         {
             string styleTagName = "";
             string tagName = "";
@@ -176,6 +199,11 @@ namespace XMLParser
             {
                 styleTagName = "w:pStyle";
                 tagName = "w:pPr";
+            }
+            else if(styleType == "table")
+            {
+                styleTagName = "w:tblStyle";
+                tagName = "w:tblPr";
             }
 
             TreeNode styleToApply = new TreeNode()

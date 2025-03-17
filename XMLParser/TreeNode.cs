@@ -12,7 +12,7 @@ namespace XMLParser
     public class TreeNode
     {
         public string TagName { get; set; }
-        public bool CloseTag { get; set; }
+        public bool CloseTag { get; set; } = false;
         public Dictionary<string, string> Attributes { get; set; } = new();
         public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
