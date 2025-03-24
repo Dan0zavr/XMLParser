@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using XMLParser.Styles;
+﻿using XMLParser.Styles;
 
 namespace XMLParser
 {
@@ -48,7 +43,7 @@ namespace XMLParser
 
 
             //Формирование и заполнение тега для стиля
-            
+
             styleNode = new TreeNode()
             {
                 TagName = "w:style",
@@ -106,21 +101,21 @@ namespace XMLParser
             TreeNode tableNameNode = new TreeNode()
             {
                 TagName = "w:name",
-                Attributes = { {"w:val",  tableName} }
+                Attributes = { { "w:val", tableName } }
             };
-            
+
             TreeNode style = new TreeNode()
             {
                 TagName = "w:style",
-                Attributes = { {"w:type", "table"}, {"w:styleId", tableName} },
+                Attributes = { { "w:type", "table" }, { "w:styleId", tableName } },
                 Children = new List<TreeNode>(),
                 CloseTag = true
             };
 
             style.Children.Add(tableNameNode);
 
-            foreach (TreeNode childNode in tableStyle) 
-            { 
+            foreach (TreeNode childNode in tableStyle)
+            {
                 style.Children.Add(childNode);
             }
 
@@ -144,7 +139,7 @@ namespace XMLParser
             for (int i = 0; i < styles.Count; i++)
             {
                 styles[i].Attributes.TryGetValue("w:styleId", out string styleId);
-                if(styleId == styleName)
+                if (styleId == styleName)
                 {
                     styleName = baseName + counter++;
                 }

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace XMLParser.Styles
+﻿namespace XMLParser.Styles
 {
     public class TableStyle : TreeNode, IStyle
     {
@@ -20,7 +13,7 @@ namespace XMLParser.Styles
         public string BorderColor { get; set; } = "000000";
         public bool RepeatHeader { get; set; }
 
-        public List<TreeNode> CreateTableStyle(TableStyle tableStyle)
+        public List<TreeNode> CreateTableStyle(TableStyle tableStyle, TextStyle textStyle, ParagraphStyle paragraphStyle)
         {
             List<TreeNode> style = new List<TreeNode>();
             TreeNode parent = new TreeNode()
@@ -31,8 +24,37 @@ namespace XMLParser.Styles
             };
             parent.Children.Add(CreateBorderStyle(tableStyle));
             parent.Children.Add(CreateCellPadding(tableStyle));
+
             style.Add(parent);
             style.Add(CreateMinHeight(tableStyle));
+
+            if (textStyle != null)
+            {
+                TreeNode textTableStyle = new TreeNode()
+                {
+                    TagName = "w:tblStylePr",
+                    Attributes = { {"w:type", "cell" } },
+                    Children = new List<TreeNode>()
+                    {
+                        new TreeNode()
+                        {
+                            TagName = "w:pPr",
+                            Children = paragraphStyle.CreateParagraphStyle(paragraphStyle),
+                            CloseTag = true
+                        },
+                        new TreeNode()
+                        {
+                            TagName = "w:rPr",
+                            Children = textStyle.CreateTextStyle(textStyle),
+                            CloseTag = true
+                        }
+                    },
+                    CloseTag = true
+                };
+
+                style.Add(textTableStyle);
+            }
+
             return style;
         }
 
@@ -63,7 +85,7 @@ namespace XMLParser.Styles
 
         private TreeNode CreateCellPadding(TableStyle tableStyle)
         {
-            string[] sides = { "w:top", "w:bottom", "w:left", "w:right"};
+            string[] sides = { "w:top", "w:bottom", "w:left", "w:right" };
             List<TreeNode> padding = new List<TreeNode>();
 
             foreach (string side in sides)
@@ -71,7 +93,7 @@ namespace XMLParser.Styles
                 TreeNode paddingNode = new TreeNode
                 {
                     TagName = side,
-                    Attributes = { { "w:w", $"{tableStyle.CellPadding}" }, { "w:type", "dxa" } }              
+                    Attributes = { { "w:w", $"{tableStyle.CellPadding}" }, { "w:type", "dxa" } }
                 };
                 padding.Add(paddingNode);
             }
@@ -91,12 +113,12 @@ namespace XMLParser.Styles
             TreeNode cellHeightParent = new TreeNode()
             {
                 TagName = "w:trPr",
-                Children = new List<TreeNode> { 
-                    new TreeNode { 
+                Children = new List<TreeNode> {
+                    new TreeNode {
 
                         TagName = "w:trHeight",
                         Attributes = {{"w:val",$"{tableStyle.MinCellHeight}"}, {"w:hRule","atLeast"} }
-                    } 
+                    }
                 },
                 CloseTag = true
 

@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO.Compression;
-using System.Linq.Expressions;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml;
+﻿using System.IO.Compression;
 
 namespace XMLParser
 {
     public class XMLRead
     {
-
         public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
         {
-            string node ="";
+            string node = "";
             if (specialTokens != null)
             {
                 foreach (var token in specialTokens)
@@ -23,7 +14,6 @@ namespace XMLParser
                     node += token;
                 }
             }
-
 
             // Создание открывающего тега
             node = "<" + treeNode.TagName;
@@ -64,7 +54,7 @@ namespace XMLParser
 
             for (int i = 0; i < file.Length; i++)
             {
-                if(file[i] == '<') //поиск тега
+                if (file[i] == '<') //поиск тега
                 {
                     int end = file.IndexOf('>', i);
                     if (end == -1) throw new Exception("Некорректный XML: незакрытый тег.");
@@ -78,7 +68,7 @@ namespace XMLParser
                         tokens.Add(token);
                     }
                     i = end;
-                    
+
                 }
                 else //поиск значения
                 {
@@ -137,7 +127,7 @@ namespace XMLParser
             return fileName;
         }
 
-        private string EnsureUniqueFileName(string fileName, string savePath) 
+        private string EnsureUniqueFileName(string fileName, string savePath)
         {
             string newFileName = ExtractExtension(fileName);
             int counter = 1;

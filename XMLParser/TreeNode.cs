@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-
-namespace XMLParser
+﻿namespace XMLParser
 {
     public class TreeNode
     {
@@ -23,7 +14,7 @@ namespace XMLParser
         {
             if (node.Children.Count != 0)
             {
-                foreach(TreeNode child in node.Children)
+                foreach (TreeNode child in node.Children)
                 {
                     if (child.TagName == tagName)
                     {
@@ -40,8 +31,8 @@ namespace XMLParser
             Queue<TreeNode> queue = new Queue<TreeNode>();
             queue.Enqueue(tree);
 
-            while (queue.Count > 0) 
-            { 
+            while (queue.Count > 0)
+            {
                 TreeNode currentNode = queue.Dequeue();
                 if (CheckChild(currentNode, tagName) != null)
                 {
@@ -62,15 +53,15 @@ namespace XMLParser
         public List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
-            Queue <TreeNode> queue = new Queue<TreeNode>();
+            Queue<TreeNode> queue = new Queue<TreeNode>();
             queue.Enqueue(tree);
 
-            while (queue.Count > 0) 
+            while (queue.Count > 0)
             {
                 TreeNode currentNode = queue.Dequeue();
                 foreach (TreeNode child in currentNode.Children)
                 {
-                    if(child.TagName == tagName)
+                    if (child.TagName == tagName)
                     {
                         tags.Add(child);
                     }
@@ -92,6 +83,23 @@ namespace XMLParser
                     if (!TagsForSave.Contains(childNode.TagName))
                     {
                         currentNode.Children.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        public void TerminateSpecialCildren(TreeNode node, string parentTagName, string deleteTagName)
+        {
+            List<TreeNode> parents = node.QuikBreadthFirstSearch(node, parentTagName);
+            foreach(TreeNode parent in parents)
+            {
+                for(int i = parent.Children.Count - 1;i >= 0; i--)
+                {
+                    TreeNode child = parent.Children[i];
+
+                    if (child.TagName == deleteTagName)
+                    {
+                        parent.Children.RemoveAt(i);
                     }
                 }
             }
@@ -190,9 +198,9 @@ namespace XMLParser
 
         public void AddChildren(List<TreeNode> parents, List<TreeNode> children)
         {
-            for(int i = 0; i < parents.Count; i++)
+            for (int i = 0; i < parents.Count; i++)
             {
-                for (int j = 0; j < children.Count; j++) 
+                for (int j = 0; j < children.Count; j++)
                 {
                     AddChild(parents[i], children[j]);
                 }
@@ -219,6 +227,6 @@ namespace XMLParser
             {
                 PrintTree(child, indent + 1);
             }
-        } 
+        }
     }
 }
