@@ -81,7 +81,7 @@ namespace XMLParser
                 ApplyStyle(documentRoot, documentSpecialTokens, tableStyleNode, _xmlRead, tempReadPath, "table");
 
                 var (numberingStyleNode, appliedStyle) = CreateNumberingStyleInFile(_xmlRead, numberingStyle, tempReadPath, tempSavePath);
-                ApplyNumberingStyle(appliedStyle, _xmlRead, tempReadPath, numberingStyle.Levels);
+                ApplyNumberingStyle(documentRoot, appliedStyle, _xmlRead, tempReadPath, numberingStyle.Levels);
 
                 //Стиль для ячеек таблиц
                 (TreeNode paragraphTableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, tableParagraphStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
@@ -187,7 +187,7 @@ namespace XMLParser
             return (numberingStyle, appliedStyle);
         }
 
-        private void ApplyNumberingStyle(TreeNode aplliedStyle, XMLRead xmlRead, string readPath, int numLevel)
+        private void ApplyNumberingStyle(TreeNode root, TreeNode aplliedStyle, XMLRead xmlRead, string readPath, int numLevel)
         {
             string styleTagName = "";
             string numberingStyleId = aplliedStyle.Attributes["w:numId"];
@@ -208,15 +208,11 @@ namespace XMLParser
             children.Add(numberingLevel);
             children.Add(numberingStyle);
 
-            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, document);
-
             List<TreeNode> foundedParents = new List<TreeNode>();
             foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
 
             root.AddChildren(foundedParents, children);
 
-            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
 
         }
         private void ApplyTableCellStyle(TreeNode root, List<string> specialTokens, TreeNode textStyle, TreeNode paragraphStyle, XMLRead xmlRead, string readPath)
