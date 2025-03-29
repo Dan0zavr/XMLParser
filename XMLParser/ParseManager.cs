@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using XMLParser.Styles;
+using System.Collections.Generic;
 
 namespace XMLParser
 {
@@ -92,9 +93,16 @@ namespace XMLParser
 
                 SerializeStyle(xmlRead, styleRoot, styleSpecialTokens);
 
+                Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesToParagraph(documentRoot));
+
+                ReconstructParagraphs(documentRoot, name);
+
                 SaveApply(xmlRead, documentRoot, documentSpecialTokens);
 
+
                 xmlRead.FilesInZip(tempReadPath, tempFolder, ExtractFileNameFromPath(tempReadPath), tempSavePath);
+
+
             }
             finally
             {
@@ -103,6 +111,164 @@ namespace XMLParser
 
 
         }
+
+        private void ReconstructParagraphs(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
+        {
+            int count = FindParagraphsCount(root, extensiveParagrahps);
+
+            List<TreeNode> newRoot = new List<TreeNode>();
+            List<TreeNode> oldParagraphs = root.LongBreadthFirstSearch(root, "w:p");
+
+            count = count + (oldParagraphs.Count - extensiveParagrahps.Count);
+
+            for (int i = 0; i < oldParagraphs.Count; i++)
+            {
+                if(extensiveParagrahps.Any(c => c.Key == i))
+                {
+                    foreach (var paragraph in extensiveParagrahps[i])
+                    {
+                        newRoot.Add(paragraph);
+                    }
+                }
+                else
+                {
+                    newRoot.Add(oldParagraphs[i]);
+                }
+            }
+
+            List<TreeNode> body = root.QuikBreadthFirstSearch(root, "w:body");
+            body[0].Children.Clear();
+            body[0].Children = newRoot;
+        }
+
+        private int FindParagraphsCount(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
+        {
+            int count = 0;
+
+            foreach(var paragraphs in extensiveParagrahps)
+            {
+                foreach (var paragraph in paragraphs.Value) 
+                { 
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private Dictionary<int, TreeNode> ExtractPicturesToParagraph(TreeNode root)
+        {
+            List<TreeNode> paragraphs = root.LongBreadthFirstSearch(root, "w:p");
+            Dictionary<int, TreeNode> paragraphsWithPic = new Dictionary<int, TreeNode>();
+
+            //проход по <w:p>
+            for (int i = 0; i < paragraphs.Count; i++)
+            {
+                //грубо говоря проход по <w:r>
+                for (int j = 0; j < paragraphs[i].Children.Count; j++)
+                {
+                    //поиск <w:drawing>
+                    for (int k = 0; k < paragraphs[i].Children[j].Children.Count; k++)
+                    {
+                        if (paragraphs[i].Children[j].Children[k].TagName == "w:drawing")
+                        {
+                            paragraphsWithPic.Add(i, paragraphs[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+            return paragraphsWithPic;
+        }
+
+        private Dictionary<int, List<TreeNode>> SplitParagraphsWithDrawings(Dictionary<int, TreeNode> paragraphs)
+        {
+            Dictionary<int, List<TreeNode>> splittedParagraphs = new Dictionary<int, List<TreeNode>>();
+
+            TreeNode paragraphStyle = ExtractStyle(paragraphs.Values.First(), "w:pPr");
+
+            Dictionary<int, TreeNode> nonStyleParagraphs = new Dictionary<int, TreeNode>();
+            foreach (var paragraph in paragraphs)
+            {
+                paragraph.Value.TerminateSpecialCildren(paragraph.Value, "w:pPr");
+                nonStyleParagraphs.Add(paragraph.Key, paragraph.Value);
+            }
+
+            foreach (var paragraph in nonStyleParagraphs)
+            {
+                List<TreeNode> paragrahpsOneNumber = new List<TreeNode>(); // Новый список для каждого абзаца
+                List<TreeNode> kit = new List<TreeNode>(); // Список для текстовых элементов
+
+                for (int i = 0; i < paragraph.Value.Children.Count; i++)
+                {
+                    var child = paragraph.Value.Children[i];
+
+                    if (child.Children.Any(c => c.TagName == "w:drawing"))
+                    {
+                        // Если перед рисунком был текст, создаем новый текстовый абзац
+                        if (kit.Count > 0)
+                        {
+                            var textPackage = new TreeNode()
+                            {
+                                TagName = "w:p",
+                                CloseTag = true,
+                                Children = new List<TreeNode> { paragraphStyle } // Копия списка
+                            };
+                            textPackage.Children.AddRange(kit);
+                            paragrahpsOneNumber.Add(textPackage);
+                            kit.Clear();
+                        }
+
+                        // Создаем отдельный абзац для рисунка
+                        var drawingPackage = new TreeNode()
+                        {
+                            TagName = "w:p",
+                            CloseTag = true,
+                            Children = new List<TreeNode> {paragraphStyle, child }
+                        };
+                        paragrahpsOneNumber.Add(drawingPackage);
+                    }
+                    else
+                    {
+                        kit.Add(child);
+                    }
+                }
+
+                // Если остался текст без рисунков, добавляем его в отдельный абзац
+                if (kit.Count > 0)
+                {
+                    var textPackage = new TreeNode()
+                    {
+                        TagName = "w:p",
+                        CloseTag = true,
+                        Children = new List<TreeNode> { paragraphStyle }
+                    };
+                    textPackage.Children.AddRange(kit);
+                    paragrahpsOneNumber.Add(textPackage);
+                }
+
+                splittedParagraphs.Add(paragraph.Key, paragrahpsOneNumber);
+            }
+
+            return splittedParagraphs;
+        }
+
+
+        private TreeNode ExtractStyle(TreeNode parent, string styleTagName)
+        {
+            List<TreeNode>extractedStyles = parent.QuikBreadthFirstSearch(parent, styleTagName);
+
+            if (extractedStyles.Count == 1)
+            {
+                return extractedStyles[0];
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
         private void CleanHandStyles(XMLRead xmlRead, string readPath, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();

@@ -88,19 +88,15 @@
             }
         }
 
-        public void TerminateSpecialCildren(TreeNode node, string parentTagName, string deleteTagName)
+        public void TerminateSpecialCildren(TreeNode node, string deleteTagName)
         {
-            List<TreeNode> parents = node.QuikBreadthFirstSearch(node, parentTagName);
-            foreach(TreeNode parent in parents)
+            for(int i = node.Children.Count - 1;i >= 0; i--)
             {
-                for(int i = parent.Children.Count - 1;i >= 0; i--)
-                {
-                    TreeNode child = parent.Children[i];
+                TreeNode child = node.Children[i];
 
-                    if (child.TagName == deleteTagName)
-                    {
-                        parent.Children.RemoveAt(i);
-                    }
+                if (child.TagName == deleteTagName)
+                {
+                    node.Children.RemoveAt(i);
                 }
             }
         }
