@@ -10,6 +10,18 @@
 
         public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign", "w:rPr", "w:numPr" };
 
+        public TreeNode Clone()
+        {
+            return new TreeNode
+            {
+                TagName = this.TagName,
+                CloseTag = this.CloseTag,
+                Attributes = new Dictionary<string, string>(this.Attributes),
+                Values = new List<string>(this.Values),
+                Children = this.Children.Select(child => child.Clone()).ToList()
+            };
+        }
+
         public TreeNode? CheckChild(TreeNode node, string tagName)
         {
             if (node.Children.Count != 0)

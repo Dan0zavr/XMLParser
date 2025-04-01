@@ -42,6 +42,7 @@ namespace XMLParser
             else
             {
                 node += "/>";
+                Console.WriteLine(node);
             }
 
             return node;
