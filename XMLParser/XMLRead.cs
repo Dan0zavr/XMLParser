@@ -16,7 +16,7 @@ namespace XMLParser
             }
 
             // Создание открывающего тега
-            node = "<" + treeNode.TagName;
+            node += "<" + treeNode.TagName;
             foreach (var attribute in treeNode.Attributes)
             {
                 node += " " + attribute.Key + "=" + $"\"{attribute.Value}\"";
@@ -42,7 +42,6 @@ namespace XMLParser
             else
             {
                 node += "/>";
-                Console.WriteLine(node);
             }
 
             return node;

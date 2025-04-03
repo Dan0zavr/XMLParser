@@ -6,7 +6,6 @@ namespace XMLParser
 {
     public class ParseManager
     {
-        private readonly TreeNode _root;
         private readonly XMLRead _xmlRead;
         private readonly StyleCreator _creator;
 
@@ -28,7 +27,8 @@ namespace XMLParser
         {
             Alingnment = "both",
             IntervalInText = 360,
-            FirstLineIndent = 1.25
+            FirstLineIndent = 1.25,
+            ContextualSpacing = false
         };
 
         private NumberingStyle numberingStyle = new NumberingStyle()
@@ -76,39 +76,43 @@ namespace XMLParser
                 var (styleRoot, styleSpecialTokens) = ReadXMLDocument(xmlRead, tempReadPath, styles);
                 var (documentRoot, documentSpecialTokens) = ReadXMLDocument(xmlRead, tempReadPath, document);
 
-                Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesFromParagraphToDictionary(documentRoot));
+                var (titlePage, content, mainTag) = SplitDocument(documentRoot);
 
-                ReconstructParagraphs(documentRoot, name);
+                Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesFromParagraphToDictionary(content));
 
-                CleanHandStyles(documentRoot, documentSpecialTokens, _xmlRead, tempSavePath);
+                ReconstructParagraphs(content, name);
+
+                CleanHandStyles(content, documentSpecialTokens, _xmlRead, tempSavePath);
 
                 (TreeNode paragraphStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, paragraphStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
-                ApplyStyle(documentRoot, documentSpecialTokens, paragraphStyleNode, _xmlRead, "paragraph");
+                ApplyStyle(content, documentSpecialTokens, paragraphStyleNode, _xmlRead, "paragraph");
 
                 (TreeNode pictureStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, pictureStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
-                ApplyPictureStyle(documentRoot, pictureStyleNode, _xmlRead, tempReadPath);
+                ApplyPictureStyle(content, pictureStyleNode, _xmlRead, tempReadPath);
 
                 CorrectParagraphChildren("w:pPr", _xmlRead, tempReadPath);
 
                 (TreeNode textStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, textStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
-                ApplyStyle(documentRoot, documentSpecialTokens, textStyleNode, _xmlRead, "character");
+                ApplyStyle(content, documentSpecialTokens, textStyleNode, _xmlRead, "character");
 
                 (TreeNode tableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, tableStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
-                ApplyStyle(documentRoot, documentSpecialTokens, tableStyleNode, _xmlRead, "table");
+                ApplyStyle(content, documentSpecialTokens, tableStyleNode, _xmlRead, "table");
 
                 var (numberingStyleNode, appliedStyle) = CreateNumberingStyleInFile(_xmlRead, numberingStyle, tempReadPath, tempSavePath);
-                ApplyNumberingStyle(documentRoot, appliedStyle, _xmlRead, tempReadPath, numberingStyle.Levels);
+                ApplyNumberingStyle(content, appliedStyle, _xmlRead, tempReadPath, numberingStyle.Levels);
 
                 //Стиль для ячеек таблиц
                 (TreeNode paragraphTableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, tableParagraphStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
                 (TreeNode textTableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, tableTextStyle, tempReadPath, tempSavePath, styleRoot, styleSpecialTokens);
-                CleanHandTableStyle(documentRoot);
+                CleanHandTableStyle(content);
 
-                ApplyTableCellStyle(documentRoot, documentSpecialTokens, textTableStyleNode, paragraphTableStyleNode, _xmlRead);
+                ApplyTableCellStyle(content, documentSpecialTokens, textTableStyleNode, paragraphTableStyleNode, _xmlRead);
 
                 SerializeStyle(xmlRead, styleRoot, styleSpecialTokens);
 
-                SaveApply(xmlRead, documentRoot, documentSpecialTokens);
+                TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
+
+                SaveApply(xmlRead, endRoot, documentSpecialTokens);
 
 
                 xmlRead.FilesInZip(tempReadPath, tempFolder, ExtractFileNameFromPath(tempReadPath), tempSavePath);
@@ -125,12 +129,8 @@ namespace XMLParser
 
         private void ReconstructParagraphs(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
         {
-            int count = FindParagraphsCount(root, extensiveParagrahps);
-
             List<TreeNode> newRoot = new List<TreeNode>();
-            List<TreeNode> oldParagraphs = root.LongBreadthFirstSearch(root, "w:p");
-
-            count = count + (oldParagraphs.Count - extensiveParagrahps.Count);
+            List<TreeNode> oldParagraphs = root.Children;
 
             for (int i = 0; i < oldParagraphs.Count; i++)
             {
@@ -147,25 +147,13 @@ namespace XMLParser
                 }
             }
 
-            List<TreeNode> body = root.QuikBreadthFirstSearch(root, "w:body");
-            body[0].Children.Clear();
-            body[0].Children = newRoot;
-            
-        }
+            //List<TreeNode> body = root.QuikBreadthFirstSearch(root, "w:body");
+            //body[0].Children.Clear();
+            //body[0].Children = newRoot;
 
-        private int FindParagraphsCount(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
-        {
-            int count = 0;
+            root.Children.Clear();
+            root.Children = newRoot;
 
-            foreach(var paragraphs in extensiveParagrahps)
-            {
-                foreach (var paragraph in paragraphs.Value) 
-                { 
-                    count++;
-                }
-            }
-
-            return count;
         }
 
         private Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
@@ -540,6 +528,94 @@ namespace XMLParser
             root = root.BuildTree(fileInTockens);
             return (root, specialTokens);
         }
+        private (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root)
+        {
+            List<TreeNode> titlePageChildren = new List<TreeNode>();
+            List<TreeNode> contentChildren = new List<TreeNode>();
+            TreeNode? sectionProperties = null; // Секция документа
+ 
 
+            bool pageBreakFounded = false;
+
+            foreach (TreeNode paragraph in root.Children[0].Children)
+            {
+                // Проверяем, есть ли разрыв страницы или секции
+                if (!pageBreakFounded)
+                {
+                    if (paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").Any())
+                    {
+                        pageBreakFounded = true;
+                        sectionProperties = paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").First();
+                    }
+
+                    foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
+                    {
+                        if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
+                        {
+                            pageBreakFounded = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!pageBreakFounded)
+                {
+                    titlePageChildren.Add(paragraph);
+                }
+                else
+                {
+                    contentChildren.Add(paragraph);
+                }
+            }
+
+            // Если секция была в титульном листе, перенесём её в конец контента
+            if (sectionProperties != null && !contentChildren.Contains(sectionProperties))
+            {
+                contentChildren.Add(sectionProperties);
+            }
+
+            TreeNode titlePage = new TreeNode()
+            {
+                TagName = "w:body",
+                CloseTag = true,
+                Children = titlePageChildren
+            };
+
+            TreeNode content = new TreeNode()
+            {
+                TagName = "w:body",
+                CloseTag = true,
+                Children = contentChildren
+            };
+
+            TreeNode mainTag = new TreeNode()
+            {
+                TagName = root.TagName,
+                CloseTag = true,    
+                Attributes = root.Attributes
+            };
+
+            return (titlePage, content, mainTag);
+        }
+
+        private TreeNode MergeDocument(TreeNode titlePage, TreeNode content, TreeNode mainTag)
+        {
+            TreeNode document = new TreeNode() 
+            {
+                TagName = "w:body",
+                CloseTag = true,
+            };
+            foreach (TreeNode child in titlePage.Children) 
+            {
+                document.Children.Add(child);
+            }
+            foreach (TreeNode child in content.Children)
+            {
+                document.Children.Add(child);
+            }
+            mainTag.Children.Add(document);
+
+            return mainTag;
+        }
     }
 }

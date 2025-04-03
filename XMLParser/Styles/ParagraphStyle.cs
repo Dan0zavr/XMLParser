@@ -15,6 +15,7 @@ namespace XMLParser.Styles
         public int IntervalInText { get; set; }
         public int? BeforeInterval { get; set; } = 0;
         public int? AfterInterval { get; set; } = 0;
+        public bool ContextualSpacing { get; set; } = false;
 
 
         public List<TreeNode> CreateParagraphStyle(ParagraphStyle paragraphStyle)
@@ -71,6 +72,15 @@ namespace XMLParser.Styles
                             styleNode.Attributes.Add("w:after", $"{twips}");
                         }
                         style.Add(styleNode);
+
+                        if (paragraphStyle.ContextualSpacing)
+                        {
+                            TreeNode contextualSpacing = new TreeNode()
+                            {
+                                TagName = "w:contextualSpacing",
+                            };
+                            style.Add(contextualSpacing);
+                        }
                         break;
                 }
             }
