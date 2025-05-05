@@ -38,7 +38,6 @@ namespace XMLParser
 
                 if (name != null)
                 {
-
                     ReconstructParagraphs(content, name);
                 }
 
@@ -87,7 +86,7 @@ namespace XMLParser
                 SaveApply(xmlRead, endRoot, documentSpecialTokens);
 
 
-                xmlRead.FilesInZip(_readPath, tempFolder, ExtractFileNameFromPath(_readPath), _savePath);
+                xmlRead.FilesInZip(tempFolder, ExtractFileNameFromPath(_readPath), _savePath);
 
 
             }
@@ -513,33 +512,40 @@ namespace XMLParser
         {
             List<TreeNode> titlePageChildren = new List<TreeNode>();
             List<TreeNode> contentChildren = new List<TreeNode>();
-            TreeNode? sectionProperties = null; // Секция документа
- 
+            TreeNode? sectionProperties = null;
 
-            bool pageBreakFounded = false;
+            bool pageBreakFound = false;
+
+            if (root.Children.Count == 0 || root.Children[0].Children == null)
+            {
+                // Пустой документ
+                return (new TreeNode { TagName = "w:body", CloseTag = true },
+                        new TreeNode { TagName = "w:body", CloseTag = true },
+                        new TreeNode { TagName = root.TagName, CloseTag = true, Attributes = root.Attributes });
+            }
 
             foreach (TreeNode paragraph in root.Children[0].Children)
             {
-                // Проверяем, есть ли разрыв страницы или секции
-                if (!pageBreakFounded)
+                // Проверяем наличие разрыва страницы или секции
+                if (!pageBreakFound)
                 {
-                    if (paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").Any())
+                    if (paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault() is TreeNode sectPr)
                     {
-                        pageBreakFounded = true;
-                        sectionProperties = paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").First();
+                        pageBreakFound = true;
+                        sectionProperties = sectPr;
                     }
 
                     foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
                     {
                         if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
                         {
-                            pageBreakFounded = true;
+                            pageBreakFound = true;
                             break;
                         }
                     }
                 }
 
-                if (!pageBreakFounded)
+                if (!pageBreakFound)
                 {
                     titlePageChildren.Add(paragraph);
                 }
@@ -549,35 +555,43 @@ namespace XMLParser
                 }
             }
 
-            // Если секция была в титульном листе, перенесём её в конец контента
+            // Если разрыва не было найдено, значит титульной части нет — всё идёт в content
+            if (!pageBreakFound)
+            {
+                contentChildren = titlePageChildren;
+                titlePageChildren = new List<TreeNode>();
+            }
+
+            // Убедимся, что sectionProperties присутствует в конце
             if (sectionProperties != null && !contentChildren.Contains(sectionProperties))
             {
                 contentChildren.Add(sectionProperties);
             }
 
-            TreeNode titlePage = new TreeNode()
+            TreeNode titlePage = new TreeNode
             {
                 TagName = "w:body",
                 CloseTag = true,
                 Children = titlePageChildren
             };
 
-            TreeNode content = new TreeNode()
+            TreeNode content = new TreeNode
             {
                 TagName = "w:body",
                 CloseTag = true,
                 Children = contentChildren
             };
 
-            TreeNode mainTag = new TreeNode()
+            TreeNode mainTag = new TreeNode
             {
                 TagName = root.TagName,
-                CloseTag = true,    
+                CloseTag = true,
                 Attributes = root.Attributes
             };
 
             return (titlePage, content, mainTag);
         }
+
 
         private TreeNode MergeDocument(TreeNode titlePage, TreeNode content, TreeNode mainTag)
         {
