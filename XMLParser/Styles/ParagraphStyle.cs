@@ -12,9 +12,9 @@ namespace XMLParser.Styles
         public double? FirstLineIndent { get; set; } = 0;
         public double? LeftIndent { get; set; } = 0;
         public double? RightIndent { get; set; } = 0;
-        public int IntervalInText { get; set; }
-        public int? BeforeInterval { get; set; } = 0;
-        public int? AfterInterval { get; set; } = 0;
+        public double IntervalInText { get; set; }
+        public double? BeforeInterval { get; set; } = 0;
+        public double? AfterInterval { get; set; } = 0;
         public bool ContextualSpacing { get; set; } = false;
 
 
@@ -57,7 +57,8 @@ namespace XMLParser.Styles
 
                     case "IntervalInText":
                         styleNode.TagName = "w:spacing";
-                        styleNode.Attributes.Add("w:line", $"{paragraphStyle.IntervalInText}");
+                        string lineValue = (Math.Truncate(paragraphStyle.IntervalInText * 240)).ToString(CultureInfo.InvariantCulture);
+                        styleNode.Attributes.Add("w:line", lineValue);
                         styleNode.Attributes.Add("w:lineRule", "auto");
 
                         if (paragraphStyle.BeforeInterval != null)

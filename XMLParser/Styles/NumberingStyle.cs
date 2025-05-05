@@ -16,7 +16,7 @@
         }
 
         public int Levels { get; set; } = 1;
-        public NumberingFormat NumberingType { get; set; }
+        public string NumberingType { get; set; }
         public string Marker { get; set; }
 
         public List<TreeNode> CreateNumberingStyle()
@@ -36,7 +36,7 @@
                 lvlNode.AddChild(lvlNode, new TreeNode
                 {
                     TagName = "w:numFmt",
-                    Attributes = { { "w:val", Enum.GetName(typeof(NumberingFormat), NumberingType).ToLower() } }
+                    Attributes = { { "w:val", NumberingType.ToLower() } }
                 });
 
                 // Текст маркера (например, "%1." для 1.)

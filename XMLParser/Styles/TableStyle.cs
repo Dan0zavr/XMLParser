@@ -1,4 +1,6 @@
-﻿namespace XMLParser.Styles
+﻿using System.Globalization;
+
+namespace XMLParser.Styles
 {
     public class TableStyle : TreeNode, IStyle
     {
@@ -6,14 +8,17 @@
 
         public string StyleType => "TableStyle";
 
-        public int CellPadding { get; set; } = 50;
+        public double CellPadding { get; set; } = 50;
         public int MinCellHeight { get; set; }
         public string VerticalAlignment { get; set; }
         public int BorderThilness { get; set; } = 4;
         public string BorderColor { get; set; } = "000000";
         public bool RepeatHeader { get; set; }
 
-        public List<TreeNode> CreateTableStyle(TableStyle tableStyle, TextStyle textStyle, ParagraphStyle paragraphStyle)
+        public TextStyle TextStyle { get; set; }
+        public ParagraphStyle ParagraphStyle { get; set; }
+
+        public List<TreeNode> CreateTableStyle(TableStyle tableStyle)
         {
             List<TreeNode> style = new List<TreeNode>();
             TreeNode parent = new TreeNode()
@@ -28,32 +33,32 @@
             style.Add(parent);
             style.Add(CreateMinHeight(tableStyle));
 
-            if (textStyle != null)
-            {
-                TreeNode textTableStyle = new TreeNode()
-                {
-                    TagName = "w:tblStylePr",
-                    Attributes = { {"w:type", "cell" } },
-                    Children = new List<TreeNode>()
-                    {
-                        new TreeNode()
-                        {
-                            TagName = "w:pPr",
-                            Children = paragraphStyle.CreateParagraphStyle(paragraphStyle),
-                            CloseTag = true
-                        },
-                        new TreeNode()
-                        {
-                            TagName = "w:rPr",
-                            Children = textStyle.CreateTextStyle(textStyle),
-                            CloseTag = true
-                        }
-                    },
-                    CloseTag = true
-                };
+            //if (tableStyle.TextStyle != null)
+            //{
+            //    TreeNode textTableStyle = new TreeNode()
+            //    {
+            //        TagName = "w:tblStylePr",
+            //        Attributes = { {"w:type", "cell" } },
+            //        Children = new List<TreeNode>()
+            //        {
+            //            new TreeNode()
+            //            {
+            //                TagName = "w:pPr",
+            //                Children = tableStyle.ParagraphStyle.CreateParagraphStyle(tableStyle.ParagraphStyle),
+            //                CloseTag = true
+            //            },
+            //            new TreeNode()
+            //            {
+            //                TagName = "w:rPr",
+            //                Children = tableStyle.TextStyle.CreateTextStyle(tableStyle.TextStyle),
+            //                CloseTag = true
+            //            }
+            //        },
+            //        CloseTag = true
+            //    };
 
-                style.Add(textTableStyle);
-            }
+            //    style.Add(textTableStyle);
+            //}
 
             return style;
         }
@@ -90,10 +95,11 @@
 
             foreach (string side in sides)
             {
+                string pad = (Math.Truncate(tableStyle.CellPadding * twipsToSantimetr)).ToString(CultureInfo.InvariantCulture);
                 TreeNode paddingNode = new TreeNode
                 {
                     TagName = side,
-                    Attributes = { { "w:w", $"{tableStyle.CellPadding}" }, { "w:type", "dxa" } }
+                    Attributes = { { "w:w", pad }, { "w:type", "dxa" } }
                 };
                 padding.Add(paddingNode);
             }
