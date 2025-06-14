@@ -7,96 +7,119 @@ namespace XMLParser
     public class ParseManager
     {
         private readonly XMLRead _xmlRead;
+        private readonly XMLWrite _xmlWrite;
         private readonly StyleCreator _creator;
+        private readonly Cleaner _cleaner;
+        private readonly Applyer _applyer;
 
         private const string document = "document.xml";
-        private const string styles = "styles.xml";
         private const string numbering = "numbering.xml";
+        private const string styles = "styles.xml";
 
         private readonly string _readPath;
         private readonly string _savePath;
-        private string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        
 
 
-        public ParseManager(XMLRead xmlRead, StyleCreator creator, Template template, string readPath, string savePath)
+        public ParseManager(string readPath, string savePath)
         {
-            _xmlRead = xmlRead;
-            _creator = creator;
             _readPath = readPath;
             _savePath = savePath;
+            _xmlRead = new XMLRead();
+            _xmlWrite = new XMLWrite();
+            _creator = new StyleCreator();            
+            _cleaner = new Cleaner();
+            _applyer = new Applyer();
 
+        }
+
+        private void MainScript(string readPath, Template template, bool splitDocument = false)
+        {
+            string tempPath = CreateTempPath();
             try
             {
-                xmlRead.UnZipDocx(_readPath, tempFolder);
+                TreeNode numberingStyle = new TreeNode();
+                TreeNode tableStyle = new TreeNode();
+                TreeNode pictureStyleNode = new TreeNode();
 
-                var (styleRoot, styleSpecialTokens) = ReadXMLDocument(xmlRead, _readPath, styles);
-                var (documentRoot, documentSpecialTokens) = ReadXMLDocument(xmlRead, _readPath, document);
+                _xmlRead.UnZipDocx(readPath, tempPath);
+                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, styles, tempPath);
 
-                var (titlePage, content, mainTag) = SplitDocument(documentRoot);
+                (TreeNode paragraphStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.ParagraphStyle, styleRoot);
+                (TreeNode textStyleNode, styleRoot) = _creator.CreateTextStyleInFile(template.TextStyle, styleRoot);
 
-                Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesFromParagraphToDictionary(content));
-
-                if (name != null)
-                {
-                    ReconstructParagraphs(content, name);
+                if (template.PictureStyle != null) {
+                    (pictureStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.PictureStyle, styleRoot);
                 }
 
-                CleanHandStyles(content, documentSpecialTokens, _xmlRead,_savePath);
+                if(template.TableStyle != null){
+                    (tableStyle, styleRoot) = _creator.CreateTableStyleInFile(template.TableStyle, styleRoot);
+                }
 
-                (TreeNode paragraphStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.ParagraphStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                ApplyStyle(content, documentSpecialTokens, paragraphStyleNode, _xmlRead, "paragraph");
+                if (template.NumberingStyle != null) {
+                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, numbering, tempPath);
+                    (numberingStyle, numberingRoot) = _creator.CreateNumberingStyleInFile(template.NumberingStyle, numberingRoot);
+                    _xmlWrite.StringToXMLDocument(_xmlWrite.SerializeNode(numberingRoot, numberingSpecialTokens), numbering, tempPath);
+                }
+
+                _xmlWrite.SerializeStyle(styleRoot, styleSpecialTokens, tempPath);
+
+
+                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, document, tempPath);
+
+                var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
 
                 if (template.PictureStyle != null)
                 {
+                    Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesFromParagraphToDictionary(content));
 
-                    (TreeNode pictureStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.PictureStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                    ApplyPictureStyle(content, pictureStyleNode, _xmlRead, _readPath);
-
-
-                    CorrectParagraphChildren("w:pPr", _xmlRead, _readPath);
+                    if (name != null)
+                    {
+                        //Выделение картинок в отдельные абзацы
+                        ReconstructParagraphs(content, name);
+                    }
                 }
 
-                (TreeNode textStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.TextStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                ApplyStyle(content, documentSpecialTokens, textStyleNode, _xmlRead, "character");
+                _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, _savePath);
 
-                if (template.TableStyle != null) 
+                _applyer.ApplyStyle(docRoot, docSpecialTokens, paragraphStyleNode, "paragraph");
+                _applyer.ApplyStyle(docRoot, docSpecialTokens, textStyleNode, "character");
+
+                if (template.TableStyle != null)
                 {
-                    (TreeNode tableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.TableStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                    ApplyStyle(content, documentSpecialTokens, tableStyleNode, _xmlRead, "table");
+                    _applyer.ApplyStyle(docRoot, docSpecialTokens, tableStyle, "table");
+                    _applyer.ApplyTableCellStyle(docRoot, docSpecialTokens, template.TableStyle.TextStyle, template.TableStyle.ParagraphStyle);
+                }
+
+                if (template.PictureStyle != null)
+                {
+                    _applyer.ApplyPictureStyle(docRoot, pictureStyleNode);
                 }
 
                 if (template.NumberingStyle != null)
                 {
-                    var (numberingStyleNode, appliedStyle) = CreateNumberingStyleInFile(_xmlRead, template.NumberingStyle, _readPath, _savePath);
-                    ApplyNumberingStyle(content, appliedStyle, _xmlRead, _readPath, template.NumberingStyle.Levels);
+                    _applyer.ApplyNumberingStyle(docRoot, numberingStyle, 1);
                 }
-                if (template.TableStyle != null) {
-                    //Стиль для ячеек таблиц
-                    (TreeNode paragraphTableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.TableStyle.ParagraphStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                    (TreeNode textTableStyleNode, styleRoot) = CreateStyleInFile(_xmlRead, template.TableStyle.TextStyle, _readPath, _savePath, styleRoot, styleSpecialTokens);
-                    CleanHandTableStyle(content);
-
-                    ApplyTableCellStyle(content, documentSpecialTokens, textTableStyleNode, paragraphTableStyleNode, _xmlRead);
-                }
-
-                SerializeStyle(xmlRead, styleRoot, styleSpecialTokens);
 
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
 
-                SaveApply(xmlRead, endRoot, documentSpecialTokens);
+                _applyer.SaveApply(_xmlWrite, endRoot, docSpecialTokens, tempPath);
 
-
-                xmlRead.FilesInZip(tempFolder, ExtractFileNameFromPath(_readPath), _savePath);
-
+                _xmlWrite.FilesInZip(tempPath, ExtractFileNameFromPath(_readPath), _savePath);
 
             }
             finally
             {
-                Directory.Delete(tempFolder, true);
+                Directory.Delete(tempPath, true);
             }
 
-
         }
+
+        private string CreateTempPath()
+        { 
+            string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            return tempFolder;
+        }  
 
         private void ReconstructParagraphs(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
         {
@@ -117,10 +140,6 @@ namespace XMLParser
                     newRoot.Add(oldParagraphs[i]);
                 }
             }
-
-            //List<TreeNode> body = root.QuikBreadthFirstSearch(root, "w:body");
-            //body[0].Children.Clear();
-            //body[0].Children = newRoot;
 
             root.Children.Clear();
             root.Children = newRoot;
@@ -144,31 +163,6 @@ namespace XMLParser
                         if (paragraphs[i].Children[j].Children[k].TagName == "w:drawing")
                         {
                             paragraphsWithPic.Add(i, paragraphs[i]);
-                            break;
-                        }
-                    }
-                }
-            }
-            return paragraphsWithPic;
-        }
-
-        private List<TreeNode> ExtractPicturesFromParagraphToList(TreeNode root)
-        {
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch(root, "w:p");
-            List<TreeNode> paragraphsWithPic = new List<TreeNode>();
-
-            //проход по <w:p>
-            for (int i = 0; i < paragraphs.Count; i++)
-            {
-                //грубо говоря проход по <w:r>
-                for (int j = 0; j < paragraphs[i].Children.Count; j++)
-                {
-                    //поиск <w:drawing>
-                    for (int k = 0; k < paragraphs[i].Children[j].Children.Count; k++)
-                    {
-                        if (paragraphs[i].Children[j].Children[k].TagName == "w:drawing")
-                        {
-                            paragraphsWithPic.Add(paragraphs[i]);
                             break;
                         }
                     }
@@ -272,202 +266,15 @@ namespace XMLParser
 
         }
 
-        private void CleanHandStyles(TreeNode root, List<string> specialTokens,XMLRead xmlRead, string savePath)
-        {
-            List<TreeNode> foundedParents = new List<TreeNode>();
-
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:rPr");
-            root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:pPr");
-            root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
-            root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:tblPr");
-            root.TerminateChildren(foundedParents);
-
-
-            SaveApply(xmlRead, root, specialTokens);
-        }
-
-        private void CleanHandTableStyle(TreeNode root)
-        {
-            List<TreeNode> foundedCells = new List<TreeNode>();
-
-            foundedCells = root.LongBreadthFirstSearch(root, "w:tc");
-
-            foreach (var cell in foundedCells) 
-            {
-                List<TreeNode> foundedParents = new List<TreeNode>();
-
-                foundedParents = cell.QuikBreadthFirstSearch(cell, "w:rPr");
-                root.TerminateChildren(foundedParents);
-                foundedParents = cell.QuikBreadthFirstSearch(cell, "w:pPr");
-                root.TerminateChildren(foundedParents);
-            }
-
-        }
-
         private string ExtractFileNameFromPath(string path)
         {
             return Path.GetFileName(path);
         }
 
-        private (TreeNode, TreeNode) CreateStyleInFile(XMLRead xmlRead, IStyle style, string readPath, string savePath,
-            TreeNode root, List<string> specialTokens, XMLParser.Styles.TextStyle? tableTextStyle = null, XMLParser.Styles.ParagraphStyle? tableParagraphStyle = null)
-        {
-            TreeNode styleNode = new TreeNode();
-
-            if (style is XMLParser.Styles.TextStyle textStyle)
-            {
-                styleNode = _creator.CreateTextAndParagraphStyleNode(style, textStyle.CreateTextStyle(textStyle), root);
-            }
-            else if (style is XMLParser.Styles.ParagraphStyle paragraphStyle)
-            {
-                styleNode = _creator.CreateTextAndParagraphStyleNode(style, paragraphStyle.CreateParagraphStyle(paragraphStyle), root);
-            }
-            else if (style is XMLParser.Styles.TableStyle tableStyle)
-            {
-                styleNode = _creator.CreateTableStyleNode(tableStyle.CreateTableStyle(tableStyle), root);
-            }
-            _creator.InroduceStyleInTree(root, styleNode);
-
-            return (styleNode, root);
-        }
-
-        private void SerializeStyle(XMLRead xmlRead, TreeNode root, List<string> specialTokens)
-        {
-            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, styles, tempFolder);
-        }
-
-        private (TreeNode, TreeNode) CreateNumberingStyleInFile(XMLRead xmlRead, XMLParser.Styles.NumberingStyle style, string readPath, string savePath)
-        {
-            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, numbering);
-
-            var (numberingStyle, appliedStyle) = _creator.CreateNumberingStyleNodes(style.CreateNumberingStyle(), root);
-
-            _creator.InroduceStyleInTree(root, numberingStyle);
-            _creator.InroduceStyleInTree(root, appliedStyle);
-
-            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, numbering, tempFolder);
-            return (numberingStyle, appliedStyle);
-        }
-
-        private void ApplyPictureStyle(TreeNode root, TreeNode style, XMLRead xmlRead, string readPath)
-        {
-            List<TreeNode> paragraphsWithDrawings = ExtractPicturesFromParagraphToList(root);
-
-            foreach (var paragraph in paragraphsWithDrawings)
-            {
-                List<TreeNode> oldStyle = paragraph.QuikBreadthFirstSearch(paragraph, "w:pPr");
-
-                paragraph.TerminateChildren(oldStyle);
-
-                TreeNode styleToApply = new TreeNode()
-                {
-                    TagName = "w:pStyle",
-                    Attributes = { { "w:val", style.Attributes["w:styleId"] } },
-                    CloseTag = false
-                };
-
-                foreach (TreeNode styleElement in oldStyle)
-                {
-                    styleElement.Children.Add(styleToApply);
-                }
-            }
-
-        }
-        private void ApplyNumberingStyle(TreeNode root, TreeNode aplliedStyle, XMLRead xmlRead, string readPath, int numLevel)
-        {
-            string styleTagName = "";
-            string numberingStyleId = aplliedStyle.Attributes["w:numId"];
-            List<TreeNode> children = new List<TreeNode>();
-
-            TreeNode numberingLevel = new TreeNode()
-            {
-                TagName = "w:ilvl",
-                Attributes = { { "w:val", $"{numLevel}" } }
-            };
-
-            TreeNode numberingStyle = new TreeNode()
-            {
-                TagName = "w:numId",
-                Attributes = { { "w:val", numberingStyleId } },
-            };
-
-            children.Add(numberingLevel);
-            children.Add(numberingStyle);
-
-            List<TreeNode> foundedParents = new List<TreeNode>();
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
-
-            root.AddChildren(foundedParents, children);
-
-
-        }
-        private void ApplyTableCellStyle(TreeNode root, List<string> specialTokens, TreeNode textStyle, TreeNode paragraphStyle, XMLRead xmlRead)
-        {
-            List<TreeNode> cells = root.LongBreadthFirstSearch(root, "w:tc");
-
-            foreach (TreeNode cell in cells)
-            {
-                ApplyStyle(cell, specialTokens, paragraphStyle, xmlRead, "paragraph");
-                ApplyStyle(cell, specialTokens, textStyle, xmlRead, "character");
-            }
-        }
-
-        private void ApplyStyle(TreeNode root, List<string> specialTokens, TreeNode style, XMLRead xmlRead, string styleType)
-        {
-            string styleTagName = "";
-            string tagName = "";
-            string styleName = style.Attributes["w:styleId"];
-            switch (styleType)
-            {
-                case "character":
-                    styleTagName = "w:rStyle";
-                    tagName = "w:rPr";
-                    break;
-
-                case "paragraph":
-                    styleTagName = "w:pStyle";
-                    tagName = "w:pPr";
-                    break;
-
-                case "table":
-                    styleTagName = "w:tblStyle";
-                    tagName = "w:tblPr";
-                    break;
-
-            }
-
-            TreeNode styleToApply = new TreeNode()
-            {
-                TagName = styleTagName,
-                Attributes = { { "w:val", styleName } },
-                CloseTag = false
-            };
-
-            List<TreeNode> foundedParents = new List<TreeNode>();
-            foundedParents = root.QuikBreadthFirstSearch(root, tagName);
-
-            for (int i = 0; i < foundedParents.Count; i++)
-            {
-                root.AddChild(foundedParents[i], styleToApply);
-            }
-            
-        }
-
-        private void SaveApply(XMLRead xmlRead, TreeNode root, List<string> specialTokens)
-        {
-            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
-        }
-
-        private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string readPath)
+        private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string readPath, string tempFolder)
         {
             // Чтение XML-документа
-            var (root, specialTokens) = ReadXMLDocument(xmlRead, readPath, document);
+            var (root, specialTokens) = xmlRead.ReadXMLDocument(readPath, document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
             List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(root, parentName);
@@ -496,20 +303,17 @@ namespace XMLParser
             }
 
             // Сериализация и десериализация дерева
-            string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
+            //string serializedTree = xmlRead.SerializeNode(root, specialTokens);
+            //xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
         }
-
-        private (TreeNode root, List<string> specialTokens) ReadXMLDocument(XMLRead xmlRead, string readPath, string fileName)
+        
+        private (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root, bool splitDocument)
         {
-            TreeNode root = new TreeNode();
-            var (fileInTockens, specialTokens) = xmlRead.Tokenize(xmlRead.XMLDocumentFileToString(fileName, tempFolder));
-            root = root.BuildTree(fileInTockens);
-            return (root, specialTokens);
-        }
+            if (splitDocument) 
+            {
+                return (new TreeNode(), root, new TreeNode() );
+            }
 
-        private (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root)
-        {
             List<TreeNode> titlePageChildren = new List<TreeNode>();
             List<TreeNode> contentChildren = new List<TreeNode>();
             TreeNode? sectionProperties = null;

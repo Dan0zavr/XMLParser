@@ -37,6 +37,7 @@
             return null;
         }
 
+        //Применяется когда искомые теги не могут идти подряд
         public List<TreeNode> QuikBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
@@ -62,7 +63,7 @@
             return tags;
         }
 
-
+        //Применяется когда искомые теги могут идти подряд
         public List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();

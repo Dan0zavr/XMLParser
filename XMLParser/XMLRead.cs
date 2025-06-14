@@ -1,50 +1,16 @@
 ﻿using System.IO.Compression;
+using XMLParser.Styles;
 
 namespace XMLParser
 {
     public class XMLRead
     {
-        public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
+        public (TreeNode root, List<string> specialTokens) ReadXMLDocument(string readPath, string fileName, string tempFolder)
         {
-            string node = "";
-            if (specialTokens != null)
-            {
-                foreach (var token in specialTokens)
-                {
-                    node += token;
-                }
-            }
-
-            // Создание открывающего тега
-            node += "<" + treeNode.TagName;
-            foreach (var attribute in treeNode.Attributes)
-            {
-                node += " " + attribute.Key + "=" + $"\"{attribute.Value}\"";
-            }
-
-            //Закрытие открывающего тега
-            if (treeNode.CloseTag == true)
-            {
-                node += ">";
-                //Дабавление значений
-                foreach (string value in treeNode.Values)
-                {
-                    node += value;
-                }
-                //Сериализация потомков
-                foreach (var child in treeNode.Children)
-                {
-                    node = node + SerializeNode(child);
-                }
-                node = node + $"</{treeNode.TagName}>";
-
-            }
-            else
-            {
-                node += "/>";
-            }
-
-            return node;
+            TreeNode root = new TreeNode();
+            var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString(fileName, tempFolder));
+            root = root.BuildTree(fileInTockens);
+            return (root, specialTokens);
         }
 
         public (List<string> tokens, List<string> specialTokens) Tokenize(string file)
@@ -87,11 +53,6 @@ namespace XMLParser
             return (tokens, specialTokens);
         }
 
-        public void StringToXMLDocument(string text, string fileName, string tempFolder)
-        {
-            string doc = tempFolder + $"\\word\\{fileName}";
-            File.WriteAllText(doc, text);
-        }
 
         public string XMLDocumentFileToString(string endFile, string tempFolder)
         {
@@ -105,39 +66,7 @@ namespace XMLParser
             Directory.CreateDirectory(tempFolder);
             ZipFile.ExtractToDirectory(readPath, tempFolder);
         }
-
-        public void FilesInZip(string tempFolder, string oldFileName, string savePath)
-        {
-            string fileNameDocx = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
-            string fileNameZip = fileNameDocx.Replace(".docx", ".zip");
-            string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
-            string savePathWithFileZip = savePath + "\\" + fileNameZip;
-            ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx);
-            ZipFile.CreateFromDirectory(tempFolder, savePathWithFileZip);
-        }
-
-        private string ExtractExtension(string fileName)
-        {
-            string newFileName;
-            if (fileName.Contains("."))
-            {
-                newFileName = fileName.Remove(fileName.IndexOf('.'));
-                return newFileName;
-            }
-            return fileName;
-        }
-
-        private string EnsureUniqueFileName(string fileName, string savePath)
-        {
-            string newFileName = ExtractExtension(fileName);
-            int counter = 1;
-            while (File.Exists(savePath + "\\" + newFileName + ".docx"))
-            {
-                newFileName = newFileName + counter;
-                counter++;
-            }
-            newFileName += ".docx";
-            return newFileName;
-        }
+        
+        
     }
 }

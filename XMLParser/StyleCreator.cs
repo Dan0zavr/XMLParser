@@ -4,11 +4,12 @@ namespace XMLParser
 {
     public class StyleCreator : TreeNode
     {
-        public TreeNode CreateTextAndParagraphStyleNode(IStyle style, List<TreeNode> styleChildren, TreeNode root)
+        public TreeNode CreateParagraphStyleNode(List<TreeNode> paragraphStyleChildren, TreeNode root)
         {
-            string tagName = "";
-            string styleType = "";
-            string styleName = EnsureUniqueStyleName(root, "w:style", "WordRegStyle");
+            string tagName = "w:pPr";
+            string styleType = "paragraph";
+            string styleName = EnsureUniqueStyleName(root, "w:style", "WordRegParagraphStyle");
+
             //Формирование тега для имени стиля
             TreeNode styleIdAndName = new TreeNode()
             {
@@ -17,21 +18,55 @@ namespace XMLParser
                 CloseTag = false
             };
 
-            if (style is TextStyle)
-            {
-                tagName = "w:rPr";
-                styleType = "character";
-            }
-            else if (style is ParagraphStyle)
-            {
-                tagName = "w:pPr";
-                styleType = "paragraph";
-            }
             //Формирование тега, содержащего параметры стиля
             TreeNode parent = new TreeNode()
             {
                 TagName = tagName,
-                Children = styleChildren,
+                Children = paragraphStyleChildren,
+                CloseTag = true
+            };
+
+            List<TreeNode> paragraphParent = new List<TreeNode>();
+            List<TreeNode> name = new List<TreeNode>();
+            paragraphParent.Add(parent);
+            name.Add(styleIdAndName);
+
+            //Формирование и заполнение тега для стиля
+            TreeNode styleNode = new TreeNode()
+            {
+                TagName = "w:style",
+                Attributes =
+                {
+                    {"w:type", styleType },
+                    {"w:styleId", styleName }
+                },
+                Children = name.Union(paragraphParent).ToList(),
+                CloseTag = true
+            };
+
+            return styleNode;
+
+        }
+
+        public TreeNode CreateTextStyleNode(List<TreeNode> textStyleChildren, TreeNode root)
+        {
+            string tagName = "w:rPr";
+            string styleType = "character";
+            string styleName = EnsureUniqueStyleName(root, "w:style", "WordRegTextStyle");
+
+            //Формирование тега для имени стиля
+            TreeNode styleIdAndName = new TreeNode()
+            {
+                TagName = $"w:name",
+                Attributes = { { "w:val", styleName } },
+                CloseTag = false
+            };
+
+            //Формирование тега, содержащего параметры стиля
+            TreeNode parent = new TreeNode()
+            {
+                TagName = tagName,
+                Children = textStyleChildren,
                 CloseTag = true
             };
 
@@ -43,7 +78,6 @@ namespace XMLParser
 
 
             //Формирование и заполнение тега для стиля
-
             styleNode = new TreeNode()
             {
                 TagName = "w:style",
@@ -122,11 +156,6 @@ namespace XMLParser
             return style;
         }
 
-        public void InroduceStyleInTree(TreeNode stylesNodeParent, TreeNode styleChilld)
-        {
-            AddChild(stylesNodeParent, styleChilld);
-        }
-
         public string EnsureUniqueStyleName(TreeNode root, string tag, string startName)
         {
             string baseName = startName; // Базовое имя стиля
@@ -165,6 +194,50 @@ namespace XMLParser
             }
 
             return id;
+        }
+
+        public (TreeNode, TreeNode) CreateParagraphStyleInFile(ParagraphStyle paragraphStyle, TreeNode root)
+        {
+            TreeNode styleNode = new TreeNode();
+            
+            styleNode = CreateParagraphStyleNode(paragraphStyle.CreateParagraphStyle(paragraphStyle), root);
+
+            AddChild(root, styleNode);
+
+            return (styleNode, root);
+        }
+
+        public (TreeNode, TreeNode) CreateTextStyleInFile(TextStyle textStyle, TreeNode root)
+        {
+            TreeNode styleNode = new TreeNode();
+
+            styleNode = CreateTextStyleNode(textStyle.CreateTextStyle(textStyle), root);
+
+            AddChild (root, styleNode);
+
+            return (styleNode, root);
+        }
+
+        public (TreeNode, TreeNode) CreateTableStyleInFile(TableStyle tableStyle, TreeNode root)
+        {
+            TreeNode styleNode = new TreeNode();
+
+            styleNode = CreateTableStyleNode(tableStyle.CreateTableStyle(tableStyle), root);
+
+            AddChild(root, styleNode);
+
+            return (styleNode, root);
+
+        }
+
+        public (TreeNode, TreeNode) CreateNumberingStyleInFile(NumberingStyle style, TreeNode root)
+        {
+            var (numberingStyle, appliedStyle) = CreateNumberingStyleNodes(style.CreateNumberingStyle(), root);
+
+            AddChild(root, numberingStyle);
+            AddChild(root, appliedStyle);
+
+            return (appliedStyle, root);
         }
     }
 }

@@ -1,4 +1,3 @@
-C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0-windows\XMLParser.csproj.AssemblyReference.cache
 C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0-windows\XMLParser.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0-windows\XMLParser.AssemblyInfoInputs.cache
 C:\Users\Haier\source\repos\XMLParser\XMLParser\obj\Debug\net8.0-windows\XMLParser.AssemblyInfo.cs
