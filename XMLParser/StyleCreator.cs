@@ -148,10 +148,7 @@ namespace XMLParser
 
             style.Children.Add(tableNameNode);
 
-            foreach (TreeNode childNode in tableStyleChildren)
-            {
-                style.Children.Add(childNode);
-            }
+            style.Children.AddRange(tableStyleChildren);
 
             return style;
         }

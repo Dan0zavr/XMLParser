@@ -40,6 +40,8 @@ namespace XMLParser
                 TreeNode numberingStyle = new TreeNode();
                 TreeNode tableStyle = new TreeNode();
                 TreeNode pictureStyleNode = new TreeNode();
+                TreeNode tableTextStyle = new TreeNode();
+                TreeNode tableParagraphStyle = new TreeNode();
 
                 _xmlRead.UnZipDocx(_readPath, tempPath);
                 var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, styles, tempPath);
@@ -52,7 +54,10 @@ namespace XMLParser
                 }
 
                 if(template.TableStyle != null){
+                    
                     (tableStyle, styleRoot) = _creator.CreateTableStyleInFile(template.TableStyle, styleRoot);
+                    (tableParagraphStyle, styleRoot) = _creator.CreateParagraphStyleInFile(template.TableStyle.ParagraphStyle, styleRoot);
+                    (tableTextStyle, styleRoot) = _creator.CreateTextStyleInFile(template.TableStyle.TextStyle, styleRoot);
                 }
 
                 if (template.NumberingStyle != null) {
@@ -87,7 +92,7 @@ namespace XMLParser
                 if (template.TableStyle != null)
                 {
                     _applyer.ApplyStyle(docRoot, tableStyle, "table");
-                    _applyer.ApplyTableCellStyle(docRoot, template.TableStyle.TextStyle, template.TableStyle.ParagraphStyle);
+                    _applyer.ApplyTableCellStyle(docRoot, tableTextStyle, tableParagraphStyle);
                 }
 
                 if (template.PictureStyle != null)
