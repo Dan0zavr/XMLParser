@@ -11,6 +11,7 @@ namespace XMLParser
         private readonly StyleCreator _creator;
         private readonly Cleaner _cleaner;
         private readonly Applyer _applyer;
+        private readonly Tokenizator _tokenizator;
 
         private const string document = "document.xml";
         private const string numbering = "numbering.xml";
@@ -19,8 +20,6 @@ namespace XMLParser
         private readonly string _readPath;
         private readonly string _savePath;
         
-
-
         public ParseManager(string readPath, string savePath)
         {
             _readPath = readPath;
@@ -30,10 +29,10 @@ namespace XMLParser
             _creator = new StyleCreator();            
             _cleaner = new Cleaner();
             _applyer = new Applyer();
-
+            _tokenizator = new Tokenizator();
         }
 
-        private void MainScript(string readPath, Template template, bool splitDocument = false)
+        public void MainScript(Template template, bool splitDocument = false)
         {
             string tempPath = CreateTempPath();
             try
@@ -42,8 +41,8 @@ namespace XMLParser
                 TreeNode tableStyle = new TreeNode();
                 TreeNode pictureStyleNode = new TreeNode();
 
-                _xmlRead.UnZipDocx(readPath, tempPath);
-                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, styles, tempPath);
+                _xmlRead.UnZipDocx(_readPath, tempPath);
+                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, styles, tempPath);
 
                 (TreeNode paragraphStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.ParagraphStyle, styleRoot);
                 (TreeNode textStyleNode, styleRoot) = _creator.CreateTextStyleInFile(template.TextStyle, styleRoot);
@@ -57,7 +56,7 @@ namespace XMLParser
                 }
 
                 if (template.NumberingStyle != null) {
-                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, numbering, tempPath);
+                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, numbering, tempPath);
                     (numberingStyle, numberingRoot) = _creator.CreateNumberingStyleInFile(template.NumberingStyle, numberingRoot);
                     _xmlWrite.StringToXMLDocument(_xmlWrite.SerializeNode(numberingRoot, numberingSpecialTokens), numbering, tempPath);
                 }
@@ -65,7 +64,7 @@ namespace XMLParser
                 _xmlWrite.SerializeStyle(styleRoot, styleSpecialTokens, tempPath);
 
 
-                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(readPath, document, tempPath);
+                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
 
@@ -82,13 +81,13 @@ namespace XMLParser
 
                 _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, _savePath);
 
-                _applyer.ApplyStyle(docRoot, docSpecialTokens, paragraphStyleNode, "paragraph");
-                _applyer.ApplyStyle(docRoot, docSpecialTokens, textStyleNode, "character");
+                _applyer.ApplyStyle(docRoot, paragraphStyleNode, "paragraph");
+                _applyer.ApplyStyle(docRoot, textStyleNode, "character");
 
                 if (template.TableStyle != null)
                 {
-                    _applyer.ApplyStyle(docRoot, docSpecialTokens, tableStyle, "table");
-                    _applyer.ApplyTableCellStyle(docRoot, docSpecialTokens, template.TableStyle.TextStyle, template.TableStyle.ParagraphStyle);
+                    _applyer.ApplyStyle(docRoot, tableStyle, "table");
+                    _applyer.ApplyTableCellStyle(docRoot, template.TableStyle.TextStyle, template.TableStyle.ParagraphStyle);
                 }
 
                 if (template.PictureStyle != null)
@@ -143,7 +142,6 @@ namespace XMLParser
 
             root.Children.Clear();
             root.Children = newRoot;
-
         }
 
         private Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
@@ -171,83 +169,90 @@ namespace XMLParser
             return paragraphsWithPic;
         }
 
+        private Dictionary<int, TreeNode> ClearParagraphsStyle(Dictionary<int, TreeNode> paragraphs)
+        {
+            Dictionary<int, TreeNode> nonStyleParagraphs = new Dictionary<int, TreeNode>();
+            foreach (var paragraph in paragraphs)
+            {
+                paragraph.Value.TerminateSpecialCildren(paragraph.Value, "w:pPr");
+                nonStyleParagraphs.Add(paragraph.Key, paragraph.Value);
+            }
+            return nonStyleParagraphs;
+        }
+
+        private List<TreeNode> SeparateText(List<TreeNode> textParagraphs, List<TreeNode> paragraphsOneNumber, TreeNode paragraphStyle)
+        {
+            if (textParagraphs.Count == 0) return paragraphsOneNumber;
+
+            var textPackage = new TreeNode()
+            {
+                TagName = "w:p",
+                CloseTag = true,
+                Children = new List<TreeNode> { paragraphStyle.Clone() } // Копия списка
+            };
+            textPackage.Children.AddRange(textParagraphs);
+            paragraphsOneNumber.Add(textPackage);
+            return paragraphsOneNumber;
+        }
+
+        private (List<TreeNode> textParagraphs, List<TreeNode> paragrahpsOneNumber) SeparateDrawings(KeyValuePair<int, TreeNode> paragraph, TreeNode paragraphStyle)
+        {
+            List<TreeNode> paragraphsOneNumber = new List<TreeNode>(); // Список абзацев с одним номером
+            List<TreeNode> textParagraphs = new List<TreeNode>(); // Список для текстовых абзацев
+
+            for (int i = 0; i < paragraph.Value.Children.Count; i++)
+            {
+                TreeNode child = paragraph.Value.Children[i];
+
+                if (child.Children.Any(c => c.TagName == "w:drawing"))
+                {
+                    // Если перед рисунком был текст, создаем новый текстовый абзац
+                    paragraphsOneNumber = SeparateText(textParagraphs, paragraphsOneNumber, paragraphStyle);
+                    textParagraphs.Clear();
+
+                    // Создаем отдельный абзац для рисунка
+                    TreeNode drawingPackage = CreateParagraphForDrawing(paragraphStyle, child);
+
+                    paragraphsOneNumber.Add(drawingPackage);
+                }
+                else
+                {
+                    textParagraphs.Add(child);
+                }
+            }
+            return (textParagraphs, paragraphsOneNumber);
+        }
+
+        private TreeNode CreateParagraphForDrawing(TreeNode paragraphStyle, TreeNode child)
+        {
+            var drawingPackage = new TreeNode()
+            {
+                TagName = "w:p",
+                CloseTag = true,
+                Children = new List<TreeNode> { paragraphStyle.Clone(), child.Clone() }
+            };
+            return drawingPackage;
+        }
+
         private Dictionary<int, List<TreeNode>> SplitParagraphsWithDrawings(Dictionary<int, TreeNode> paragraphs)
         {
-            if (paragraphs.Count != 0)
+            if (paragraphs.Count == 0) return null;
+
+            Dictionary<int, List<TreeNode>> splittedParagraphs = new Dictionary<int, List<TreeNode>>();
+            TreeNode paragraphStyle = ExtractStyle(paragraphs.Values.First(), "w:pPr");
+            Dictionary<int, TreeNode> nonStyleParagraphs = ClearParagraphsStyle(paragraphs);
+
+            foreach (var paragraph in nonStyleParagraphs)
             {
-                Dictionary<int, List<TreeNode>> splittedParagraphs = new Dictionary<int, List<TreeNode>>();
+                var (textParagraphs, paragrahpsOneNumber) = SeparateDrawings(paragraph, paragraphStyle);
 
-                TreeNode paragraphStyle = ExtractStyle(paragraphs.Values.First(), "w:pPr");
+                // Если остался текст без рисунков, добавляем его в отдельный абзац
+                paragrahpsOneNumber = SeparateText(textParagraphs, paragrahpsOneNumber, paragraphStyle);
 
-                Dictionary<int, TreeNode> nonStyleParagraphs = new Dictionary<int, TreeNode>();
-                foreach (var paragraph in paragraphs)
-                {
-                    paragraph.Value.TerminateSpecialCildren(paragraph.Value, "w:pPr");
-                    nonStyleParagraphs.Add(paragraph.Key, paragraph.Value);
-                }
-
-                foreach (var paragraph in nonStyleParagraphs)
-                {
-                    List<TreeNode> paragrahpsOneNumber = new List<TreeNode>(); // Новый список для каждого абзаца
-                    List<TreeNode> kit = new List<TreeNode>(); // Список для текстовых элементов
-
-                    for (int i = 0; i < paragraph.Value.Children.Count; i++)
-                    {
-                        TreeNode child = paragraph.Value.Children[i];
-
-                        if (child.Children.Any(c => c.TagName == "w:drawing"))
-                        {
-                            // Если перед рисунком был текст, создаем новый текстовый абзац
-                            if (kit.Count > 0)
-                            {
-                                var textPackage = new TreeNode()
-                                {
-                                    TagName = "w:p",
-                                    CloseTag = true,
-                                    Children = new List<TreeNode> { paragraphStyle.Clone() } // Копия списка
-                                };
-                                textPackage.Children.AddRange(kit);
-                                paragrahpsOneNumber.Add(textPackage);
-                                kit.Clear();
-                            }
-
-                            // Создаем отдельный абзац для рисунка
-                            var drawingPackage = new TreeNode()
-                            {
-                                TagName = "w:p",
-                                CloseTag = true,
-                                Children = new List<TreeNode> { paragraphStyle.Clone(), child.Clone() }
-                            };
-                            paragrahpsOneNumber.Add(drawingPackage);
-                        }
-                        else
-                        {
-                            kit.Add(child);
-                        }
-                    }
-
-                    // Если остался текст без рисунков, добавляем его в отдельный абзац
-                    if (kit.Count > 0)
-                    {
-                        var textPackage = new TreeNode()
-                        {
-                            TagName = "w:p",
-                            CloseTag = true,
-                            Children = new List<TreeNode> { paragraphStyle.Clone() }
-                        };
-                        textPackage.Children.AddRange(kit);
-                        paragrahpsOneNumber.Add(textPackage);
-                    }
-
-                    splittedParagraphs.Add(paragraph.Key, paragrahpsOneNumber);
-                }
-
-                return splittedParagraphs;
+                splittedParagraphs.Add(paragraph.Key, paragrahpsOneNumber);
             }
-            else
-            {
-                return null;
-            }
+
+            return splittedParagraphs;
         }
 
 
@@ -255,15 +260,8 @@ namespace XMLParser
         {
             List<TreeNode>extractedStyles = parent.QuikBreadthFirstSearch(parent, styleTagName);
 
-            if (extractedStyles.Count == 1)
-            {
-                return extractedStyles[0];
-            }
-            else
-            {
-                return null;
-            }
-
+            if (extractedStyles.Count == 1) return extractedStyles[0];
+            else return null;
         }
 
         private string ExtractFileNameFromPath(string path)
@@ -274,7 +272,7 @@ namespace XMLParser
         private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string readPath, string tempFolder)
         {
             // Чтение XML-документа
-            var (root, specialTokens) = xmlRead.ReadXMLDocument(readPath, document, tempFolder);
+            var (root, specialTokens) = xmlRead.ReadXMLDocument(_tokenizator, readPath, document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
             List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(root, parentName);
@@ -309,9 +307,13 @@ namespace XMLParser
         
         private (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root, bool splitDocument)
         {
-            if (splitDocument) 
+            if (!splitDocument) 
             {
-                return (new TreeNode(), root, new TreeNode() );
+                TreeNode mTag = DuplicateNodeWithAttributes(root);
+
+                TreeNode tPage = DuplicateNodeWithAttributes(root);
+
+                return (tPage, root,  mTag);
             }
 
             List<TreeNode> titlePageChildren = new List<TreeNode>();
@@ -333,20 +335,7 @@ namespace XMLParser
                 // Проверяем наличие разрыва страницы или секции
                 if (!pageBreakFound)
                 {
-                    if (paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault() is TreeNode sectPr)
-                    {
-                        pageBreakFound = true;
-                        sectionProperties = sectPr;
-                    }
-
-                    foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
-                    {
-                        if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
-                        {
-                            pageBreakFound = true;
-                            break;
-                        }
-                    }
+                    TryFindPageBreak(paragraph, out sectionProperties);
                 }
 
                 if (!pageBreakFound)
@@ -372,28 +361,49 @@ namespace XMLParser
                 contentChildren.Add(sectionProperties);
             }
 
-            TreeNode titlePage = new TreeNode
-            {
-                TagName = "w:body",
-                CloseTag = true,
-                Children = titlePageChildren
-            };
+            TreeNode titlePage = CreateBodyNode(titlePageChildren);
+            TreeNode content = CreateBodyNode(contentChildren);
 
-            TreeNode content = new TreeNode
-            {
-                TagName = "w:body",
-                CloseTag = true,
-                Children = contentChildren
-            };
-
-            TreeNode mainTag = new TreeNode
-            {
-                TagName = root.TagName,
-                CloseTag = true,
-                Attributes = root.Attributes
-            };
+            TreeNode mainTag = DuplicateNodeWithAttributes(root);
 
             return (titlePage, content, mainTag);
+        }
+
+        private bool TryFindPageBreak(TreeNode paragraph, out TreeNode sectionProperties)
+        {
+            sectionProperties = paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault();
+            if (sectionProperties != null) return true;
+
+            foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
+            {
+                if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private TreeNode CreateBodyNode(List<TreeNode> children)
+        {
+            TreeNode node = new TreeNode
+            {
+                TagName = "w:body",
+                CloseTag = true,
+                Children = children
+            };
+            return node;
+        }
+
+        private TreeNode DuplicateNodeWithAttributes(TreeNode node)
+        {
+            TreeNode duplicatedNode = new TreeNode
+            {
+                TagName = node.TagName,
+                CloseTag = true,
+                Attributes = node.Attributes
+            };
+            return duplicatedNode;
         }
 
 
@@ -404,14 +414,8 @@ namespace XMLParser
                 TagName = "w:body",
                 CloseTag = true,
             };
-            foreach (TreeNode child in titlePage.Children) 
-            {
-                document.Children.Add(child);
-            }
-            foreach (TreeNode child in content.Children)
-            {
-                document.Children.Add(child);
-            }
+            document.Children.AddRange(titlePage.Children);
+            document.Children.AddRange(content.Children);
             mainTag.Children.Add(document);
 
             return mainTag;

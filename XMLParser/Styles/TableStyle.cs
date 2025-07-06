@@ -33,32 +33,32 @@ namespace XMLParser.Styles
             style.Add(parent);
             style.Add(CreateMinHeight(tableStyle));
 
-            //if (tableStyle.TextStyle != null)
-            //{
-            //    TreeNode textTableStyle = new TreeNode()
-            //    {
-            //        TagName = "w:tblStylePr",
-            //        Attributes = { {"w:type", "cell" } },
-            //        Children = new List<TreeNode>()
-            //        {
-            //            new TreeNode()
-            //            {
-            //                TagName = "w:pPr",
-            //                Children = tableStyle.ParagraphStyle.CreateParagraphStyle(tableStyle.ParagraphStyle),
-            //                CloseTag = true
-            //            },
-            //            new TreeNode()
-            //            {
-            //                TagName = "w:rPr",
-            //                Children = tableStyle.TextStyle.CreateTextStyle(tableStyle.TextStyle),
-            //                CloseTag = true
-            //            }
-            //        },
-            //        CloseTag = true
-            //    };
+            if (tableStyle.TextStyle != null)
+            {
+                TreeNode textTableStyle = new TreeNode()
+                {
+                    TagName = "w:tblStylePr",
+                    Attributes = { { "w:type", "cell" } },
+                    Children = new List<TreeNode>()
+                    {
+                        new TreeNode()
+                        {
+                            TagName = "w:pPr",
+                            Children = tableStyle.ParagraphStyle.CreateParagraphStyle(tableStyle.ParagraphStyle),
+                            CloseTag = true
+                        },
+                        new TreeNode()
+                        {
+                            TagName = "w:rPr",
+                            Children = tableStyle.TextStyle.CreateTextStyle(tableStyle.TextStyle),
+                            CloseTag = true
+                        }
+                    },
+                    CloseTag = true
+                };
 
-            //    style.Add(textTableStyle);
-            //}
+                style.Add(textTableStyle);
+            }
 
             return style;
         }

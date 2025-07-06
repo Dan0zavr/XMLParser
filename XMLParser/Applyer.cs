@@ -12,8 +12,6 @@ namespace XMLParser
     public class Applyer
     {
         private const string document = "document.xml";
-        private const string numbering = "numbering.xml";
-        private const string styles = "styles.xml";
 
         public void ApplyPictureStyle(TreeNode root, TreeNode style)
         {
@@ -25,12 +23,7 @@ namespace XMLParser
 
                 paragraph.TerminateChildren(oldStyle);
 
-                TreeNode styleToApply = new TreeNode()
-                {
-                    TagName = "w:pStyle",
-                    Attributes = { { "w:val", style.Attributes["w:styleId"] } },
-                    CloseTag = false
-                };
+                TreeNode styleToApply = CreateStyleToApply(style);
 
                 foreach (TreeNode styleElement in oldStyle)
                 {
@@ -38,6 +31,18 @@ namespace XMLParser
                 }
             }
 
+        }
+
+        private TreeNode CreateStyleToApply(TreeNode style)
+        {
+            TreeNode styleToApply = new TreeNode()
+            {
+                TagName = "w:pStyle",
+                Attributes = { { "w:val", style.Attributes["w:styleId"] } },
+                CloseTag = false
+            };
+
+            return styleToApply;
         }
 
 
@@ -68,14 +73,15 @@ namespace XMLParser
             root.AddChildren(foundedParents, children);
 
         }
-        public void ApplyTableCellStyle(TreeNode root, List<string> specialTokens, TreeNode textStyle, TreeNode paragraphStyle)
+
+        public void ApplyTableCellStyle(TreeNode root, TreeNode textStyle, TreeNode paragraphStyle)
         {
             List<TreeNode> cells = root.LongBreadthFirstSearch(root, "w:tc");
 
             foreach (TreeNode cell in cells)
             {
-                ApplyStyle(cell, specialTokens, paragraphStyle, "paragraph");
-                ApplyStyle(cell, specialTokens, textStyle, "character");
+                ApplyStyle(cell,  paragraphStyle, "paragraph");
+                ApplyStyle(cell, textStyle, "character");
             }
         }
 
@@ -141,7 +147,7 @@ namespace XMLParser
             }
         }
 
-        public void ApplyStyle(TreeNode root, List<string> specialTokens, TreeNode style, string styleType)
+        public void ApplyStyle(TreeNode root, TreeNode style, string styleType)
         {
             string styleTagName = GetStyleTagName(styleType);
             string tagName = GetTagName(styleType);

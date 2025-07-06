@@ -11,15 +11,13 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("XMLParser")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("ParserTest")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e5f6307c654271e681702a4df91ac6c791f9b933")]
-[assembly: System.Reflection.AssemblyProductAttribute("XMLParser")]
-[assembly: System.Reflection.AssemblyTitleAttribute("XMLParser")]
+[assembly: System.Reflection.AssemblyProductAttribute("ParserTest")]
+[assembly: System.Reflection.AssemblyTitleAttribute("ParserTest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
-[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 
 // Создано классом WriteCodeFragment MSBuild.
 

@@ -129,7 +129,7 @@ namespace XMLParser
             return (mainStyleNode, appliedStyle);
         }
 
-        public TreeNode CreateTableStyleNode(List<TreeNode> tableStyle, TreeNode root)
+        public TreeNode CreateTableStyleNode(List<TreeNode> tableStyleChildren, TreeNode root)
         {
             string tableName = EnsureUniqueStyleName(root, "w:style", "WordRegTableStyle");
             TreeNode tableNameNode = new TreeNode()
@@ -148,7 +148,7 @@ namespace XMLParser
 
             style.Children.Add(tableNameNode);
 
-            foreach (TreeNode childNode in tableStyle)
+            foreach (TreeNode childNode in tableStyleChildren)
             {
                 style.Children.Add(childNode);
             }

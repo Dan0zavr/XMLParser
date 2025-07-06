@@ -22,7 +22,6 @@ namespace XMLParser
             root.TerminateChildren(foundedParents);
 
             return root;
-            //SaveApply(xmlRead, root, specialTokens);
         }
 
         public TreeNode CleanHandTableStyle(TreeNode root)
