@@ -8,24 +8,19 @@ namespace XMLParser
 {
     public class Cleaner
     {
-        private Applyer applyer = new Applyer();
-
         public TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, XMLRead xmlRead, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
             foundedParents = root.QuikBreadthFirstSearch(root, "w:rPr");
             root.TerminateChildren(foundedParents);
-            
             foundedParents = root.QuikBreadthFirstSearch(root, "w:pPr");
             root.TerminateChildren(foundedParents);
-
             foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
             root.TerminateChildren(foundedParents);
-
             foundedParents = root.QuikBreadthFirstSearch(root, "w:tblPr");
             root.TerminateChildren(foundedParents);
-            List<TreeNode> paragraphs = applyer.ExtractPicturesFromParagraphToList(root);
+
             return root;
         }
 

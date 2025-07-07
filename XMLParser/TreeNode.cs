@@ -1,4 +1,6 @@
-﻿namespace XMLParser
+﻿using System.Text.RegularExpressions;
+
+namespace XMLParser
 {
     public class TreeNode
     {
@@ -133,7 +135,7 @@
                     if (start != -1)
                     {
                         string newAttribute = token.Substring(start + 1, token.Length - start - 3); // Учитываем "/>"
-                        var attributes = newAttribute.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var attributes = CorrectSplit(newAttribute);
 
                         foreach (var item in attributes)
                         {
@@ -204,6 +206,40 @@
             }
 
             return root;
+        }
+
+        private List<string> CorrectSplit(string attribute)
+        {
+            string pattern = "\" ";
+            List<string> attributes = new List<string>();
+
+            MatchCollection matches = Regex.Matches(attribute, pattern);
+
+            if (matches.Count > 0)
+            {
+                int startIndex = 0;
+                foreach (Match match in matches)
+                {
+                    int spaceIndex = match.Index + 1;
+
+                    string newAttribute = attribute.Substring(startIndex, spaceIndex - startIndex);
+                    attributes.Add(newAttribute);
+                    startIndex = spaceIndex;
+                }
+                string endAttribute = attribute.Substring(startIndex, attribute.Length - startIndex);
+                attributes.Add(endAttribute);
+            }
+            else
+            {
+                attributes.Add(attribute);
+            }
+
+            if (String.IsNullOrEmpty(attributes[0]))
+            {
+                throw new Exception($"Какая-то хня c {attribute} получилось это: {attributes}");
+            }
+
+            return attributes;
         }
 
         public void AddChildren(List<TreeNode> parents, List<TreeNode> children)

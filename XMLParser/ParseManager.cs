@@ -86,8 +86,6 @@ namespace XMLParser
 
                 _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, _savePath);
 
-                List<TreeNode> p = _applyer.ExtractPicturesFromParagraphToList(content);
-
                 _applyer.ApplyStyle(content, paragraphStyleNode, "paragraph");
                 _applyer.ApplyStyle(content, textStyleNode, "character");
 
@@ -340,19 +338,10 @@ namespace XMLParser
             foreach (TreeNode paragraph in root.Children[0].Children)
             {
                 // Проверяем наличие разрыва страницы или секции
-                if (!pageBreakFound)
-                {
-                    TryFindPageBreak(paragraph, out sectionProperties);
-                }
+                if (!pageBreakFound) pageBreakFound = TryFindPageBreak(paragraph, out sectionProperties);
 
-                if (!pageBreakFound)
-                {
-                    titlePageChildren.Add(paragraph);
-                }
-                else
-                {
-                    contentChildren.Add(paragraph);
-                }
+                if (!pageBreakFound) titlePageChildren.Add(paragraph);
+                else contentChildren.Add(paragraph);
             }
 
             // Если разрыва не было найдено, значит титульной части нет — всё идёт в content
@@ -379,7 +368,8 @@ namespace XMLParser
         private bool TryFindPageBreak(TreeNode paragraph, out TreeNode sectionProperties)
         {
             sectionProperties = paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault();
-            if (sectionProperties != null) return true;
+            if (sectionProperties != null) 
+                return true;
 
             foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
             {
