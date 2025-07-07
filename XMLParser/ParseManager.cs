@@ -86,23 +86,25 @@ namespace XMLParser
 
                 _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, _savePath);
 
-                _applyer.ApplyStyle(docRoot, paragraphStyleNode, "paragraph");
-                _applyer.ApplyStyle(docRoot, textStyleNode, "character");
+                List<TreeNode> p = _applyer.ExtractPicturesFromParagraphToList(content);
+
+                _applyer.ApplyStyle(content, paragraphStyleNode, "paragraph");
+                _applyer.ApplyStyle(content, textStyleNode, "character");
 
                 if (template.TableStyle != null)
                 {
-                    _applyer.ApplyStyle(docRoot, tableStyle, "table");
-                    _applyer.ApplyTableCellStyle(docRoot, tableTextStyle, tableParagraphStyle);
+                    _applyer.ApplyStyle(content, tableStyle, "table");
+                    _applyer.ApplyTableCellStyle(content, tableTextStyle, tableParagraphStyle);
                 }
 
                 if (template.PictureStyle != null)
                 {
-                    _applyer.ApplyPictureStyle(docRoot, pictureStyleNode);
+                    _applyer.ApplyPictureStyle(content, pictureStyleNode);
                 }
 
                 if (template.NumberingStyle != null)
                 {
-                    _applyer.ApplyNumberingStyle(docRoot, numberingStyle, 1);
+                    _applyer.ApplyNumberingStyle(content, numberingStyle, 1);
                 }
 
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);

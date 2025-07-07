@@ -149,6 +149,7 @@ namespace XMLParser
 
         public void ApplyStyle(TreeNode root, TreeNode style, string styleType)
         {
+            List<TreeNode> p = ExtractPicturesFromParagraphToList(root);
             string styleTagName = GetStyleTagName(styleType);
             string tagName = GetTagName(styleType);
             string styleName = style.Attributes["w:styleId"];
@@ -156,6 +157,7 @@ namespace XMLParser
             TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
 
             ApplyStylesToNodes(root, tagName, applyStyle);
+            
         }
 
         public void SaveApply(XMLWrite xmlWrite, TreeNode root, List<string> specialTokens, string tempFolder)
@@ -165,7 +167,7 @@ namespace XMLParser
         }
 
 
-        private List<TreeNode> ExtractPicturesFromParagraphToList(TreeNode root)
+        public List<TreeNode> ExtractPicturesFromParagraphToList(TreeNode root)
         {
             List<TreeNode> paragraphs = root.LongBreadthFirstSearch(root, "w:p");
             List<TreeNode> paragraphsWithPic = new List<TreeNode>();
