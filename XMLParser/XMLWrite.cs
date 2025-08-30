@@ -19,19 +19,17 @@ namespace XMLParser
             File.WriteAllText(doc, text);
         }
 
-        public void FilesInZip(string tempFolder, string oldFileName, string savePath)
+        public string FilesInZip(string tempFolder, string oldFileName, string savePath)
         {
-            string fileNameDocx = EnsureUniqueFileName(ExtractExtension(oldFileName) + "_new" + ".docx", savePath);
-            string fileNameZip = fileNameDocx.Replace(".docx", ".zip");
+            string fileNameDocx = EnsureUniqueFileName(Path.GetFileNameWithoutExtension(oldFileName) + "_new" + ".docx", savePath);
             string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
-            string savePathWithFileZip = savePath + "\\" + fileNameZip;
             ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx);
-            ZipFile.CreateFromDirectory(tempFolder, savePathWithFileZip);
+            return savePathWithFileDocx;
         }
 
         private string EnsureUniqueFileName(string fileName, string savePath)
         {
-            string newFileName = ExtractExtension(fileName);
+            string newFileName = Path.GetFileNameWithoutExtension(fileName);
             int counter = 1;
             while (File.Exists(savePath + "\\" + newFileName + ".docx"))
             {
@@ -40,16 +38,6 @@ namespace XMLParser
             }
             newFileName += ".docx";
             return newFileName;
-        }
-        private string ExtractExtension(string fileName)
-        {
-            string newFileName;
-            if (fileName.Contains("."))
-            {
-                newFileName = fileName.Remove(fileName.IndexOf('.'));
-                return newFileName;
-            }
-            return fileName;
         }
 
         public void SerializeStyle(TreeNode root, List<string> specialTokens, string tempFolder)

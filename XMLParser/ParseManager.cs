@@ -17,13 +17,9 @@ namespace XMLParser
         private const string numbering = "numbering.xml";
         private const string styles = "styles.xml";
 
-        private readonly string _readPath;
-        private readonly string _savePath;
         
-        public ParseManager(string readPath, string savePath)
+        public ParseManager()
         {
-            _readPath = readPath;
-            _savePath = savePath;
             _xmlRead = new XMLRead();
             _xmlWrite = new XMLWrite();
             _creator = new StyleCreator();            
@@ -32,7 +28,7 @@ namespace XMLParser
             _tokenizator = new Tokenizator();
         }
 
-        public void MainScript(Template template, bool splitDocument = false)
+        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false)
         {
             string tempPath = CreateTempPath();
             try
@@ -43,8 +39,8 @@ namespace XMLParser
                 TreeNode tableTextStyle = new TreeNode();
                 TreeNode tableParagraphStyle = new TreeNode();
 
-                _xmlRead.UnZipDocx(_readPath, tempPath);
-                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, styles, tempPath);
+                _xmlRead.UnZipDocx(readPath, tempPath);
+                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, styles, tempPath);
 
                 (TreeNode paragraphStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.ParagraphStyle, styleRoot);
                 (TreeNode textStyleNode, styleRoot) = _creator.CreateTextStyleInFile(template.TextStyle, styleRoot);
@@ -61,7 +57,7 @@ namespace XMLParser
                 }
 
                 if (template.NumberingStyle != null) {
-                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, numbering, tempPath);
+                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, numbering, tempPath);
                     (numberingStyle, numberingRoot) = _creator.CreateNumberingStyleInFile(template.NumberingStyle, numberingRoot);
                     _xmlWrite.StringToXMLDocument(_xmlWrite.SerializeNode(numberingRoot, numberingSpecialTokens), numbering, tempPath);
                 }
@@ -69,7 +65,7 @@ namespace XMLParser
                 _xmlWrite.SerializeStyle(styleRoot, styleSpecialTokens, tempPath);
 
 
-                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, _readPath, document, tempPath);
+                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
 
@@ -84,7 +80,7 @@ namespace XMLParser
                     }
                 }
 
-                _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, _savePath);
+                _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, savePath);
 
                 _applyer.ApplyStyle(content, paragraphStyleNode, "paragraph");
                 _applyer.ApplyStyle(content, textStyleNode, "character");
@@ -109,7 +105,7 @@ namespace XMLParser
 
                 _applyer.SaveApply(_xmlWrite, endRoot, docSpecialTokens, tempPath);
 
-                _xmlWrite.FilesInZip(tempPath, ExtractFileNameFromPath(_readPath), _savePath);
+                return _xmlWrite.FilesInZip(tempPath, Path.GetFileName(readPath), savePath);
 
             }
             finally
@@ -260,18 +256,12 @@ namespace XMLParser
             return splittedParagraphs;
         }
 
-
         private TreeNode ExtractStyle(TreeNode parent, string styleTagName)
         {
             List<TreeNode>extractedStyles = parent.QuikBreadthFirstSearch(parent, styleTagName);
 
             if (extractedStyles.Count == 1) return extractedStyles[0];
             else return null;
-        }
-
-        private string ExtractFileNameFromPath(string path)
-        {
-            return Path.GetFileName(path);
         }
 
         private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string readPath, string tempFolder)
@@ -402,7 +392,6 @@ namespace XMLParser
             };
             return duplicatedNode;
         }
-
 
         private TreeNode MergeDocument(TreeNode titlePage, TreeNode content, TreeNode mainTag)
         {
