@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace XMLParser.Styles
 {
-    public class Template
+    public class Template : IStyle
     {
+        public string StyleType => "Template";
         public TextStyle TextStyle { get; set; }
         public ParagraphStyle ParagraphStyle { get; set; }
         public NumberingStyle? NumberingStyle { get; set; }
@@ -15,3 +16,4 @@ namespace XMLParser.Styles
         public ParagraphStyle? PictureStyle { get; set; }
     }
 }
+

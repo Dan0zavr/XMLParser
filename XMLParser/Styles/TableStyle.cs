@@ -9,7 +9,7 @@ namespace XMLParser.Styles
         public string StyleType => "TableStyle";
 
         public double CellPadding { get; set; } = 50;
-        public int MinCellHeight { get; set; }
+        public int MinCellHeight { get; set; } = 0;
         public string VerticalAlignment { get; set; }
         public int BorderThilness { get; set; } = 4;
         public string BorderColor { get; set; } = "000000";
