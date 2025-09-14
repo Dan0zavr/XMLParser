@@ -12,7 +12,6 @@ namespace XMLParser
     {
         private const string styles = "styles.xml";
 
-
         public void StringToXMLDocument(string text, string fileName, string tempFolder)
         {
             string doc = tempFolder + $"\\word\\{fileName}";
@@ -24,6 +23,7 @@ namespace XMLParser
             string fileNameDocx = EnsureUniqueFileName(Path.GetFileNameWithoutExtension(oldFileName) + "_new" + ".docx", savePath);
             string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
             ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx);
+            ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx.Replace(".docx", ".zip")); //Для тестов
             return savePathWithFileDocx;
         }
 

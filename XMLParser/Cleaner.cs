@@ -8,18 +8,36 @@ namespace XMLParser
 {
     public class Cleaner
     {
+        private const string rPrTagName = "w:rPr";
+        private const string pPrTagName = "w:pPr";
+        private const string numPrTagName = "w:numPr";
+        private const string tblPrTagName = "w:tblPr";
+        private const string tablecellTagName = "w:tc";
+        private const string runBlockTagName = "w:r";
+
+        private readonly TreeNode rPrTag = new TreeNode()
+        {
+            TagName = rPrTagName,
+            CloseTag = true,
+            Attributes = new Dictionary<string, string>(),
+            Values = new List<string>(),
+            Children = new List<TreeNode>()
+        };
+
         public TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, XMLRead xmlRead, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:rPr");
+            foundedParents = root.QuikBreadthFirstSearch(root, rPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:pPr");
+            foundedParents = root.QuikBreadthFirstSearch(root, pPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
+            foundedParents = root.QuikBreadthFirstSearch(root, numPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:tblPr");
+            foundedParents = root.QuikBreadthFirstSearch(root, tblPrTagName);
             root.TerminateChildren(foundedParents);
+
+            FillMissingTags(runBlockTagName, rPrTag, root);
 
             return root;
         }
@@ -28,20 +46,32 @@ namespace XMLParser
         {
             List<TreeNode> foundedCells = new List<TreeNode>();
 
-            foundedCells = root.LongBreadthFirstSearch(root, "w:tc");
+            foundedCells = root.LongBreadthFirstSearch(root, tablecellTagName);
 
             foreach (var cell in foundedCells)
             {
                 List<TreeNode> foundedParents = new List<TreeNode>();
 
-                foundedParents = cell.QuikBreadthFirstSearch(cell, "w:rPr");
+                foundedParents = cell.QuikBreadthFirstSearch(cell, rPrTagName);
                 root.TerminateChildren(foundedParents);
-                foundedParents = cell.QuikBreadthFirstSearch(cell, "w:pPr");
+                foundedParents = cell.QuikBreadthFirstSearch(cell, pPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
             return root;
 
+        }
+
+        public void FillMissingTags(string parentTagName, TreeNode tagToFill, TreeNode root)
+        {
+            List<TreeNode> runBlocks = root.LongBreadthFirstSearch(root, parentTagName);
+            foreach (var block in runBlocks)
+            {
+                if (!block.Children.Contains(tagToFill))
+                {
+                    block.Children.Add(tagToFill);
+                }
+            }
         }
 
     }

@@ -40,7 +40,7 @@ namespace XMLParser
                 TreeNode tableParagraphStyle = new TreeNode();
 
                 _xmlRead.UnZipDocx(readPath, tempPath);
-                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, styles, tempPath);
+                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, styles, tempPath);
 
                 (TreeNode paragraphStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.ParagraphStyle, styleRoot);
                 (TreeNode textStyleNode, styleRoot) = _creator.CreateTextStyleInFile(template.TextStyle, styleRoot);
@@ -57,15 +57,15 @@ namespace XMLParser
                 }
 
                 if (template.NumberingStyle != null) {
-                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, numbering, tempPath);
+                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, numbering, tempPath);
                     (numberingStyle, numberingRoot) = _creator.CreateNumberingStyleInFile(template.NumberingStyle, numberingRoot);
                     _xmlWrite.StringToXMLDocument(_xmlWrite.SerializeNode(numberingRoot, numberingSpecialTokens), numbering, tempPath);
                 }
 
                 _xmlWrite.SerializeStyle(styleRoot, styleSpecialTokens, tempPath);
 
-
-                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, readPath, document, tempPath);
+                //Применение стилей
+                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
 
@@ -81,6 +81,7 @@ namespace XMLParser
                 }
 
                 _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, savePath);
+
 
                 _applyer.ApplyStyle(content, paragraphStyleNode, "paragraph");
                 _applyer.ApplyStyle(content, textStyleNode, "character");
@@ -264,10 +265,10 @@ namespace XMLParser
             else return null;
         }
 
-        private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string readPath, string tempFolder)
+        private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string tempFolder)
         {
             // Чтение XML-документа
-            var (root, specialTokens) = xmlRead.ReadXMLDocument(_tokenizator, readPath, document, tempFolder);
+            var (root, specialTokens) = xmlRead.ReadXMLDocument(_tokenizator, document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
             List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(root, parentName);
