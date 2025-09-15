@@ -5,7 +5,7 @@ namespace XMLParser
 {
     public class XMLRead
     {
-        public (TreeNode root, List<string> specialTokens) ReadXMLDocument(Tokenizator tokenizator, string readPath, string fileName, string tempFolder)
+        public (TreeNode root, List<string> specialTokens) ReadXMLDocument(Tokenizator tokenizator, string fileName, string tempFolder)
         {
             TreeNode root = new TreeNode();
             var (fileInTockens, specialTokens) = tokenizator.Tokenize(XMLDocumentFileToString(fileName, tempFolder));
@@ -15,7 +15,7 @@ namespace XMLParser
 
         public string XMLDocumentFileToString(string endFile, string tempFolder)
         {
-            string doc = tempFolder + $"\\word\\{endFile}";
+            string doc = Path.Combine(tempFolder, "word", endFile);
             string list = File.ReadAllText(doc);
             return list;
         }
