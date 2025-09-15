@@ -15,14 +15,17 @@ namespace XMLParser
         private const string tablecellTagName = "w:tc";
         private const string runBlockTagName = "w:r";
 
-        private readonly TreeNode rPrTag = new TreeNode()
+        private TreeNode CreateRPrTag()
         {
-            TagName = rPrTagName,
-            CloseTag = true,
-            Attributes = new Dictionary<string, string>(),
-            Values = new List<string>(),
-            Children = new List<TreeNode>()
-        };
+            return new TreeNode()
+            {
+                TagName = rPrTagName,
+                CloseTag = true,
+                Attributes = new Dictionary<string, string>(),
+                Values = new List<string>(),
+                Children = new List<TreeNode>()
+            };
+        }
 
         public TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, XMLRead xmlRead, string savePath)
         {
@@ -37,7 +40,7 @@ namespace XMLParser
             foundedParents = root.QuikBreadthFirstSearch(root, tblPrTagName);
             root.TerminateChildren(foundedParents);
 
-            FillMissingTags(runBlockTagName, rPrTag, root);
+            FillMissingTags(runBlockTagName, root);
 
             return root;
         }
@@ -62,14 +65,17 @@ namespace XMLParser
 
         }
 
-        public void FillMissingTags(string parentTagName, TreeNode tagToFill, TreeNode root)
+        public void FillMissingTags(string parentTagName, TreeNode root)
         {
             List<TreeNode> runBlocks = root.LongBreadthFirstSearch(root, parentTagName);
             foreach (var block in runBlocks)
             {
-                if (!block.Children.Contains(tagToFill))
+                if (!block.Children.Any(child => child.TagName == rPrTagName))
                 {
-                    block.Children.Add(tagToFill);
+                    List<TreeNode> children = block.Children;
+                    block.Children.Clear();
+                    block.Children.Add(CreateRPrTag());
+                    block.Children.AddRange(children);
                 }
             }
         }

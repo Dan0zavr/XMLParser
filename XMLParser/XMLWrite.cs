@@ -88,5 +88,63 @@ namespace XMLParser
 
             return node;
         }
+
+        //public string SerializeTree(TreeNode root, List<string> specialsTokens = null)
+        //{
+
+        //}
+
+        private string SerializeNode(TreeNode node, string marker)
+        {
+            string tag = "<" + node.TagName + SerializeAttributes(node.Attributes);
+            if (node.CloseTag)
+            {
+                tag += "/>";
+                return tag;
+            }
+            else
+            {
+                tag += ">";
+            }
+            
+            tag += SerialazeValues(node.Values);
+            if (node.Children.Count > 0) 
+            {
+                tag += marker;
+            }
+            tag += "<" + node.TagName + "/>";
+            return tag;
+
+        }
+
+        private string SerializeAttributes(Dictionary<string, string> attributes)
+        {
+            string result = string.Empty;
+            foreach (var attr in attributes)
+            {
+                result += attr.Key + " " + SerializeAttributeValue(attr.Value) + " ";
+            }
+            return result;
+        }
+
+        private string SerializeAttributeValue(string value)
+        {
+            return "\"" + value + "\"";
+        }
+
+        private string SerialazeValues(List<string> values)
+        {
+            string result = string.Empty;
+            foreach (var value in values)
+            {
+                result += value + " ";
+            }
+            return result.TrimEnd(' ');
+        }
+
+        private string GenereateMarker()
+        {
+            return Guid.NewGuid().ToString();
+        }
     }
 }
