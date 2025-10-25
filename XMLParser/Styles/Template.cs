@@ -3,17 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.Builders;
 
 namespace XMLParser.Styles
 {
     public class Template : IStyle
     {
         public string StyleType => "Template";
-        public TextStyle TextStyle { get; set; }
-        public ParagraphStyle ParagraphStyle { get; set; }
+        public required TextStyle TextStyle { get; set; }
+        public required ParagraphStyle ParagraphStyle { get; set; }
         public NumberingStyle? NumberingStyle { get; set; }
         public TableStyle? TableStyle { get; set; }
         public ParagraphStyle? PictureStyle { get; set; }
+
+        public Dictionary<IStyle, IStyleBuilder> GetStyles()
+        {
+            Dictionary<IStyle, IStyleBuilder> styles = new Dictionary<IStyle, IStyleBuilder>();
+
+            styles.Add(TextStyle, new TextStyleBuilder());
+            styles.Add(ParagraphStyle, new ParagraphStyleBuilder());
+            if(NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
+            if(TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
+            if (PictureStyle != null) styles.Add(PictureStyle, new ParagraphStyleBuilder());
+            return styles;
+        }
     }
 }
 

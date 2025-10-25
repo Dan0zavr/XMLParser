@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static XMLParser.TreeNode;
 
 namespace XMLParser
 {
@@ -31,13 +32,13 @@ namespace XMLParser
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
-            foundedParents = root.QuikBreadthFirstSearch(root, rPrTagName);
+            foundedParents = QuikBreadthFirstSearch(root, rPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, pPrTagName);
+            foundedParents = QuikBreadthFirstSearch(root, pPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, numPrTagName);
+            foundedParents = QuikBreadthFirstSearch(root, numPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(root, tblPrTagName);
+            foundedParents = QuikBreadthFirstSearch(root, tblPrTagName);
             root.TerminateChildren(foundedParents);
 
             FillMissingTags(runBlockTagName, root);
@@ -49,15 +50,15 @@ namespace XMLParser
         {
             List<TreeNode> foundedCells = new List<TreeNode>();
 
-            foundedCells = root.LongBreadthFirstSearch(root, tablecellTagName);
+            foundedCells = LongBreadthFirstSearch(root, tablecellTagName);
 
             foreach (var cell in foundedCells)
             {
                 List<TreeNode> foundedParents = new List<TreeNode>();
 
-                foundedParents = cell.QuikBreadthFirstSearch(cell, rPrTagName);
+                foundedParents = QuikBreadthFirstSearch(cell, rPrTagName);
                 root.TerminateChildren(foundedParents);
-                foundedParents = cell.QuikBreadthFirstSearch(cell, pPrTagName);
+                foundedParents = QuikBreadthFirstSearch(cell, pPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
@@ -67,7 +68,7 @@ namespace XMLParser
 
         public void FillMissingTags(string parentTagName, TreeNode root)
         {
-            List<TreeNode> runBlocks = root.LongBreadthFirstSearch(root, parentTagName);
+            List<TreeNode> runBlocks = LongBreadthFirstSearch(root, parentTagName);
             foreach (var block in runBlocks)
             {
                 if (!block.Children.Any(child => child.TagName == rPrTagName))

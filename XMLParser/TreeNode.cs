@@ -24,7 +24,7 @@ namespace XMLParser
             };
         }
 
-        public TreeNode? CheckChild(TreeNode node, string tagName)
+        private static TreeNode? CheckChild(TreeNode node, string tagName)
         {
             if (node.Children.Count != 0)
             {
@@ -40,7 +40,7 @@ namespace XMLParser
         }
 
         //Применяется когда искомые теги не могут идти подряд
-        public List<TreeNode> QuikBreadthFirstSearch(TreeNode tree, string tagName)
+        public static List<TreeNode> QuikBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
@@ -66,7 +66,7 @@ namespace XMLParser
         }
 
         //Применяется когда искомые теги могут идти подряд
-        public List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
+        public static List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
@@ -248,14 +248,9 @@ namespace XMLParser
             {
                 for (int j = 0; j < children.Count; j++)
                 {
-                    AddChild(parents[i], children[j]);
+                    parents[i].Children.Add(children[j]);
                 }
             }
-        }
-
-        public void AddChild(TreeNode parent, TreeNode child)
-        {
-            parent.Children.Add(child);
         }
 
         public void PrintTree(TreeNode node, int indent = 0)

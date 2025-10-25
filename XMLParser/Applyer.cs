@@ -6,9 +6,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using XMLParser.Styles;
+using static XMLParser.TreeNode;
 
 namespace XMLParser
 {
+    // применяет стили к конкретным элементам
     public class Applyer
     {
         private const string document = "document.xml";
@@ -19,7 +21,7 @@ namespace XMLParser
 
             foreach (var paragraph in paragraphsWithDrawings)
             {
-                List<TreeNode> oldStyle = paragraph.QuikBreadthFirstSearch(paragraph, "w:pPr");
+                List<TreeNode> oldStyle = QuikBreadthFirstSearch(paragraph, "w:pPr");
 
                 paragraph.TerminateChildren(oldStyle);
 
@@ -68,7 +70,7 @@ namespace XMLParser
             children.Add(numberingStyle);
 
             List<TreeNode> foundedParents = new List<TreeNode>();
-            foundedParents = root.QuikBreadthFirstSearch(root, "w:numPr");
+            foundedParents = QuikBreadthFirstSearch(root, "w:numPr");
 
             root.AddChildren(foundedParents, children);
 
@@ -76,7 +78,7 @@ namespace XMLParser
 
         public void ApplyTableCellStyle(TreeNode root, TreeNode textStyle, TreeNode paragraphStyle)
         {
-            List<TreeNode> cells = root.LongBreadthFirstSearch(root, "w:tc");
+            List<TreeNode> cells = LongBreadthFirstSearch(root, "w:tc");
 
             foreach (TreeNode cell in cells)
             {
@@ -139,11 +141,11 @@ namespace XMLParser
 
         private void ApplyStylesToNodes(TreeNode root, string tagName, TreeNode styleToApply)
         {
-            List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(root, tagName);
+            List<TreeNode> foundedParents = QuikBreadthFirstSearch(root, tagName);
 
             for (int i = 0; i < foundedParents.Count; i++)
             {
-                root.AddChild(foundedParents[i], styleToApply);
+                foundedParents[i].Children.Add(styleToApply);
             }
         }
 
@@ -168,7 +170,7 @@ namespace XMLParser
 
         private List<TreeNode> ExtractPicturesFromParagraphToList(TreeNode root)
         {
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch(root, "w:p");
+            List<TreeNode> paragraphs = LongBreadthFirstSearch(root, "w:p");
             List<TreeNode> paragraphsWithPic = new List<TreeNode>();
 
             //проход по <w:p>

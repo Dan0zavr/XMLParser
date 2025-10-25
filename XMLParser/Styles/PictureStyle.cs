@@ -14,12 +14,5 @@ namespace XMLParser.Styles
         public string LableAllignment { get; set; }
         public bool AutoGenerateLable { get; set; }
         public string? LabelValue { get; set; } 
-
-        public List<string> CreatePictureStyle(PictureStyle pictureStyle)
-        {
-            List<string> style = new List<string>();
-
-            return style;
-        }
     }
 }

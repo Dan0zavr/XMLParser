@@ -1,6 +1,5 @@
-﻿using System.Xml;
-using XMLParser.Styles;
-using System.Collections.Generic;
+﻿using XMLParser.Styles;
+using static XMLParser.TreeNode;
 
 namespace XMLParser
 {
@@ -147,7 +146,7 @@ namespace XMLParser
 
         private Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
         {
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch(root, "w:p");
+            List<TreeNode> paragraphs = LongBreadthFirstSearch(root, "w:p");
             Dictionary<int, TreeNode> paragraphsWithPic = new Dictionary<int, TreeNode>();
 
             //проход по <w:p>
@@ -258,7 +257,7 @@ namespace XMLParser
 
         private TreeNode ExtractStyle(TreeNode parent, string styleTagName)
         {
-            List<TreeNode>extractedStyles = parent.QuikBreadthFirstSearch(parent, styleTagName);
+            List<TreeNode>extractedStyles = QuikBreadthFirstSearch(parent, styleTagName);
 
             if (extractedStyles.Count == 1) return extractedStyles[0];
             else return null;
@@ -270,7 +269,7 @@ namespace XMLParser
             var (root, specialTokens) = xmlRead.ReadXMLDocument(_tokenizator, document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
-            List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(root, parentName);
+            List<TreeNode> foundedParents = QuikBreadthFirstSearch(root, parentName);
 
             // Обработка каждого родительского элемента
             foreach (var parent in foundedParents)
@@ -357,11 +356,11 @@ namespace XMLParser
 
         private bool TryFindPageBreak(TreeNode paragraph, out TreeNode sectionProperties)
         {
-            sectionProperties = paragraph.QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault();
+            sectionProperties = QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault();
             if (sectionProperties != null) 
                 return true;
 
-            foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch(paragraph, "w:br"))
+            foreach (TreeNode breakNode in QuikBreadthFirstSearch(paragraph, "w:br"))
             {
                 if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
                 {
