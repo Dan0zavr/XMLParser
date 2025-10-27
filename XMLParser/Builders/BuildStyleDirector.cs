@@ -57,15 +57,14 @@ namespace XMLParser.Builders
         private KeyValuePair<StyleCategory, TreeNode> BuildUniqueSimpleStyle(IStyle styleParams, IStyleBuilder builder)
         {
             StylesUniquelizer uniquelizer = new StylesUniquelizer(_styleRoot);
-            StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().ToString());
+            StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().Name.ToString());
 
             TreeNode style = builder.BuildStyle(styleParams);
-            TreeNode styleNode = QuikBreadthFirstSearch(style, "w:style").First();
             TreeNode nameNode = QuikBreadthFirstSearch(style, "w:name").First();
 
             string styleName = uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
 
-            styleNode.Attributes["w:styleId"] = styleName;
+            style.Attributes["w:styleId"] = styleName;
             nameNode.Attributes["w:val"] = styleName;
 
             return new KeyValuePair<StyleCategory, TreeNode>(category, style);
@@ -76,8 +75,8 @@ namespace XMLParser.Builders
             // строим стили
             TreeNode tblStyle = builder.BuildStyle(styleParams);
             KeyValuePair<StyleCategory, TreeNode> tableStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.TableStyle, tblStyle);
-            KeyValuePair<StyleCategory, TreeNode> textTableStyle = BuildUniqueSimpleStyle(styleParams.TextStyle, new TextStyleBuilder());
-            KeyValuePair<StyleCategory, TreeNode> paragraphTableStyle = BuildUniqueSimpleStyle(styleParams.ParagraphStyle, new ParagraphStyleBuilder());
+            KeyValuePair<StyleCategory, TreeNode> textTableStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.TableTextStyle, BuildUniqueSimpleStyle(styleParams.TextStyle, new TextStyleBuilder()).Value);
+            KeyValuePair<StyleCategory, TreeNode> paragraphTableStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.TableParagraphStyle, BuildUniqueSimpleStyle(styleParams.ParagraphStyle, new ParagraphStyleBuilder()).Value);
 
             // ищем ноды в котрых заглушка
             TreeNode textLinkInTable = QuikBreadthFirstSearch(tblStyle, "w:rStyle").First();
