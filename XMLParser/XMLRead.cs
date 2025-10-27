@@ -1,26 +1,27 @@
 ﻿using System.IO.Compression;
 using XMLParser.Styles;
+using static XMLParser.Tokenizator;
 
 namespace XMLParser
 {
-    public class XMLRead
+    public static class XMLRead
     {
-        public (TreeNode root, List<string> specialTokens) ReadXMLDocument(Tokenizator tokenizator, string fileName, string tempFolder)
+        public static (TreeNode root, List<string> specialTokens) ReadXMLDocument(string fileName, string tempFolder)
         {
             TreeNode root = new TreeNode();
-            var (fileInTockens, specialTokens) = tokenizator.Tokenize(XMLDocumentFileToString(fileName, tempFolder));
+            var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString(fileName, tempFolder));
             root = root.BuildTree(fileInTockens);
             return (root, specialTokens);
         }
 
-        public string XMLDocumentFileToString(string endFile, string tempFolder)
+        public static string XMLDocumentFileToString(string endFile, string tempFolder)
         {
             string doc = Path.Combine(tempFolder, "word", endFile);
             string list = File.ReadAllText(doc);
             return list;
         }
 
-        public void UnZipDocx(string readPath, string tempFolder)
+        public static void UnZipDocx(string readPath, string tempFolder)
         {
             Directory.CreateDirectory(tempFolder);
             ZipFile.ExtractToDirectory(readPath, tempFolder);

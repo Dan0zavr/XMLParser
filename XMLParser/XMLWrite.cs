@@ -8,17 +8,15 @@ using XMLParser.Styles;
 
 namespace XMLParser
 {
-    public class XMLWrite
+    public static class XMLWrite
     {
-        private const string styles = "styles.xml";
-
-        public void StringToXMLDocument(string text, string fileName, string tempFolder)
+        public static void StringToXMLDocument(string text, string fileName, string tempFolder)
         {
             string doc = tempFolder + $"\\word\\{fileName}";
             File.WriteAllText(doc, text);
         }
 
-        public string FilesInZip(string tempFolder, string oldFileName, string savePath)
+        public static string FilesInZip(string tempFolder, string oldFileName, string savePath)
         {
             string fileNameDocx = EnsureUniqueFileName(Path.GetFileNameWithoutExtension(oldFileName) + "_new" + ".docx", savePath);
             string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
@@ -26,7 +24,7 @@ namespace XMLParser
             return savePathWithFileDocx;
         }
 
-        private string EnsureUniqueFileName(string fileName, string savePath)
+        private static string EnsureUniqueFileName(string fileName, string savePath)
         {
             string newFileName = Path.GetFileNameWithoutExtension(fileName);
             int counter = 1;
@@ -39,13 +37,13 @@ namespace XMLParser
             return newFileName;
         }
 
-        public void TreeToXMLDocument(TreeNode root, List<string> specialTokens, string docName, string tempFolder)
+        public static void TreeToXMLDocument(TreeNode root, List<string> specialTokens, string docName, string tempFolder)
         {
             string serializedTree = SerializeNode(root, specialTokens);
             StringToXMLDocument(serializedTree, docName, tempFolder);
         }
 
-        public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
+        public static string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)
         {
             string node = "";
             if (specialTokens != null)
@@ -93,7 +91,7 @@ namespace XMLParser
 
         //}
 
-        private string SerializeNode(TreeNode node, string marker)
+        private static string SerializeNode(TreeNode node, string marker)
         {
             string tag = "<" + node.TagName + SerializeAttributes(node.Attributes);
             if (node.CloseTag)
@@ -116,7 +114,7 @@ namespace XMLParser
 
         }
 
-        private string SerializeAttributes(Dictionary<string, string> attributes)
+        private static string SerializeAttributes(Dictionary<string, string> attributes)
         {
             string result = string.Empty;
             foreach (var attr in attributes)
@@ -126,12 +124,12 @@ namespace XMLParser
             return result;
         }
 
-        private string SerializeAttributeValue(string value)
+        private static string SerializeAttributeValue(string value)
         {
             return "\"" + value + "\"";
         }
 
-        private string SerialazeValues(List<string> values)
+        private static string SerialazeValues(List<string> values)
         {
             string result = string.Empty;
             foreach (var value in values)
@@ -139,11 +137,6 @@ namespace XMLParser
                 result += value + " ";
             }
             return result.TrimEnd(' ');
-        }
-
-        private string GenereateMarker()
-        {
-            return Guid.NewGuid().ToString();
         }
     }
 }

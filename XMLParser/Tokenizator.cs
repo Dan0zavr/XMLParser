@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace XMLParser
 {
-    public class Tokenizator
+    public static class Tokenizator
     {
-        public (List<string> tokens, List<string> specialTokens) Tokenize(string file)
+        public static (List<string> tokens, List<string> specialTokens) Tokenize(string file)
         {
             List<string> tokens = new List<string>();
             List<string> specialTokens = new List<string>();

@@ -7,7 +7,7 @@ using static XMLParser.TreeNode;
 
 namespace XMLParser
 {
-    public class Cleaner
+    public static class Cleaner
     {
         private const string rPrTagName = "w:rPr";
         private const string pPrTagName = "w:pPr";
@@ -16,7 +16,7 @@ namespace XMLParser
         private const string tablecellTagName = "w:tc";
         private const string runBlockTagName = "w:r";
 
-        private TreeNode CreateRPrTag()
+        private static TreeNode CreateRPrTag()
         {
             return new TreeNode()
             {
@@ -28,7 +28,7 @@ namespace XMLParser
             };
         }
 
-        public TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, XMLRead xmlRead, string savePath)
+        public static TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
@@ -46,7 +46,7 @@ namespace XMLParser
             return root;
         }
 
-        public TreeNode CleanHandTableStyle(TreeNode root)
+        public static TreeNode CleanHandTableStyle(TreeNode root)
         {
             List<TreeNode> foundedCells = new List<TreeNode>();
 
@@ -66,7 +66,7 @@ namespace XMLParser
 
         }
 
-        public void FillMissingTags(string parentTagName, TreeNode root)
+        public static void FillMissingTags(string parentTagName, TreeNode root)
         {
             List<TreeNode> runBlocks = LongBreadthFirstSearch(root, parentTagName);
             foreach (var block in runBlocks)

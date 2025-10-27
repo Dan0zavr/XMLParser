@@ -2,28 +2,18 @@
 using XMLParser.Builders;
 using XMLParser.Styles;
 using static XMLParser.TreeNode;
+using static XMLParser.XMLRead;
+using static XMLParser.XMLWrite;
+using static XMLParser.Cleaner;
+using static XMLParser.Tokenizator;
 
 namespace XMLParser
 {
     public class ParseManager
     {
-        private readonly XMLRead _xmlRead;
-        private readonly XMLWrite _xmlWrite;
-        private readonly Cleaner _cleaner;
-        private readonly Tokenizator _tokenizator;
-
         private const string document = "document.xml";
         private const string numbering = "numbering.xml";
         private const string styles = "styles.xml";
-
-        
-        public ParseManager()
-        {
-            _xmlRead = new XMLRead();
-            _xmlWrite = new XMLWrite();         
-            _cleaner = new Cleaner();
-            _tokenizator = new Tokenizator();
-        }
 
         public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false)
         {
@@ -36,9 +26,9 @@ namespace XMLParser
                 TreeNode tableTextStyle = new TreeNode();
                 TreeNode tableParagraphStyle = new TreeNode();
 
-                _xmlRead.UnZipDocx(readPath, tempPath);
-                var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, styles, tempPath);
-                var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, numbering, tempPath);
+                UnZipDocx(readPath, tempPath);
+                var (styleRoot, styleSpecialTokens) = ReadXMLDocument(styles, tempPath);
+                var (numberingRoot, numberingSpecialTokens) = ReadXMLDocument(numbering, tempPath);
 
                 BuildStyleDirector buildDirector = new BuildStyleDirector(styleRoot, numberingRoot);
                 // для styles.xml  для numbering.xml
@@ -47,10 +37,10 @@ namespace XMLParser
                 XMLParser.StyleIntegrator.IntegrateStylesToTree(styleRoot, inStyles.Values.ToList());
                 XMLParser.StyleIntegrator.IntegrateStylesToTree(numberingRoot, inNumbering.Values.ToList());
 
-                _xmlWrite.TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
+                TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
 
                 //Применение стилей
-                var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, document, tempPath);
+                var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
 
@@ -65,7 +55,7 @@ namespace XMLParser
                     }
                 }
 
-                _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, savePath);
+                CleanHandStyles(content, docSpecialTokens, savePath);
 
                 // применение стилей
                 ApplyContext applyContext = new ApplyContext();
@@ -79,9 +69,9 @@ namespace XMLParser
 
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
 
-                _xmlWrite.TreeToXMLDocument(endRoot, docSpecialTokens, document, tempPath);
+                TreeToXMLDocument(endRoot, docSpecialTokens, document, tempPath);
 
-                return _xmlWrite.FilesInZip(tempPath, Path.GetFileName(readPath), savePath);
+                return FilesInZip(tempPath, Path.GetFileName(readPath), savePath);
 
             }
             finally
@@ -240,10 +230,10 @@ namespace XMLParser
             else return null;
         }
 
-        private void CorrectParagraphChildren(string parentName, XMLRead xmlRead, string tempFolder)
+        private void CorrectParagraphChildren(string parentName, string tempFolder)
         {
             // Чтение XML-документа
-            var (root, specialTokens) = xmlRead.ReadXMLDocument(_tokenizator, document, tempFolder);
+            var (root, specialTokens) = ReadXMLDocument(document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
             List<TreeNode> foundedParents = QuikBreadthFirstSearch(root, parentName);
