@@ -48,12 +48,12 @@ namespace XMLParser.Builders
             return styleNode;
         }
 
-        public (TreeNode, TreeNode) SyncId(TreeNode style, TreeNode abstractStyle, TreeNode root)
+        public (KeyValuePair<StyleCategory, TreeNode>, KeyValuePair<StyleCategory, TreeNode>) SyncId(KeyValuePair<StyleCategory, TreeNode> style, KeyValuePair<StyleCategory, TreeNode> abstractStyle, TreeNode root)
         {
             string abstractStyleId = EnsureUniqueNumberingId(root);
             string styleId = EnsureUniqueNumberingId(root);
 
-            TreeNode abstractNum = QuikBreadthFirstSearch(abstractStyle, "w:abstractNum").FirstOrDefault();
+            TreeNode abstractNum = QuikBreadthFirstSearch(abstractStyle.Value, "w:abstractNum").FirstOrDefault();
 
             if (abstractNum != null)
             {
@@ -64,9 +64,9 @@ namespace XMLParser.Builders
                 throw new Exception("Не получилось найти \"w:abstractNum\"");
             }
 
-            style.Attributes["w:numId"] = styleId;
+            style.Value.Attributes["w:numId"] = styleId;
 
-            TreeNode abstractNumIdInStyle = QuikBreadthFirstSearch(style, "w:abstractNumId").FirstOrDefault();
+            TreeNode abstractNumIdInStyle = QuikBreadthFirstSearch(style.Value, "w:abstractNumId").FirstOrDefault();
 
             if (abstractNumIdInStyle != null) 
             {

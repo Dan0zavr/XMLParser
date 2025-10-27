@@ -1,4 +1,6 @@
-﻿using XMLParser.Styles;
+﻿using XMLParser.ApplyStrategies;
+using XMLParser.Builders;
+using XMLParser.Styles;
 using static XMLParser.TreeNode;
 
 namespace XMLParser
@@ -7,9 +9,7 @@ namespace XMLParser
     {
         private readonly XMLRead _xmlRead;
         private readonly XMLWrite _xmlWrite;
-        private readonly StyleCreator _creator;
         private readonly Cleaner _cleaner;
-        private readonly Applyer _applyer;
         private readonly Tokenizator _tokenizator;
 
         private const string document = "document.xml";
@@ -20,10 +20,8 @@ namespace XMLParser
         public ParseManager()
         {
             _xmlRead = new XMLRead();
-            _xmlWrite = new XMLWrite();
-            _creator = new StyleCreator();            
+            _xmlWrite = new XMLWrite();         
             _cleaner = new Cleaner();
-            _applyer = new Applyer();
             _tokenizator = new Tokenizator();
         }
 
@@ -40,28 +38,16 @@ namespace XMLParser
 
                 _xmlRead.UnZipDocx(readPath, tempPath);
                 var (styleRoot, styleSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, styles, tempPath);
+                var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, numbering, tempPath);
 
-                (TreeNode paragraphStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.ParagraphStyle, styleRoot);
-                (TreeNode textStyleNode, styleRoot) = _creator.CreateTextStyleInFile(template.TextStyle, styleRoot);
+                BuildStyleDirector buildDirector = new BuildStyleDirector(styleRoot, numberingRoot);
+                // для styles.xml  для numbering.xml
+                (var inStyles, var inNumbering) = buildDirector.BuildAllStyles(template.GetStyles());
 
-                if (template.PictureStyle != null) {
-                    (pictureStyleNode, styleRoot) = _creator.CreateParagraphStyleInFile(template.PictureStyle, styleRoot);
-                }
+                XMLParser.StyleIntegrator.IntegrateStylesToTree(styleRoot, inStyles.Values.ToList());
+                XMLParser.StyleIntegrator.IntegrateStylesToTree(numberingRoot, inNumbering.Values.ToList());
 
-                if(template.TableStyle != null){
-                    
-                    (tableStyle, styleRoot) = _creator.CreateTableStyleInFile(template.TableStyle, styleRoot);
-                    (tableParagraphStyle, styleRoot) = _creator.CreateParagraphStyleInFile(template.TableStyle.ParagraphStyle, styleRoot);
-                    (tableTextStyle, styleRoot) = _creator.CreateTextStyleInFile(template.TableStyle.TextStyle, styleRoot);
-                }
-
-                if (template.NumberingStyle != null) {
-                    var (numberingRoot, numberingSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, numbering, tempPath);
-                    (numberingStyle, numberingRoot) = _creator.CreateNumberingStyleInFile(template.NumberingStyle, numberingRoot);
-                    _xmlWrite.StringToXMLDocument(_xmlWrite.SerializeNode(numberingRoot, numberingSpecialTokens), numbering, tempPath);
-                }
-
-                _xmlWrite.SerializeStyle(styleRoot, styleSpecialTokens, tempPath);
+                _xmlWrite.TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
 
                 //Применение стилей
                 var (docRoot, docSpecialTokens) = _xmlRead.ReadXMLDocument(_tokenizator, document, tempPath);
@@ -81,28 +67,19 @@ namespace XMLParser
 
                 _cleaner.CleanHandStyles(content, docSpecialTokens, _xmlRead, savePath);
 
-                _applyer.ApplyStyle(content, paragraphStyleNode, "paragraph");
-                _applyer.ApplyStyle(content, textStyleNode, "character");
-
-                if (template.TableStyle != null)
+                // применение стилей
+                ApplyContext applyContext = new ApplyContext();
+                Dictionary<StyleCategory, TreeNode> allStyles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);
+                foreach(var strategy in allStyles)
                 {
-                    _applyer.ApplyStyle(content, tableStyle, "table");
-                    _applyer.ApplyTableCellStyle(content, tableTextStyle, tableParagraphStyle);
-                }
-
-                if (template.PictureStyle != null)
-                {
-                    _applyer.ApplyPictureStyle(content, pictureStyleNode);
-                }
-
-                if (template.NumberingStyle != null)
-                {
-                    _applyer.ApplyNumberingStyle(content, numberingStyle, 1);
+                    applyContext.SetStrategy(strategy.Key);
+                    applyContext.ApplyStyle(docRoot, strategy.Value);
+                    
                 }
 
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
 
-                _applyer.SaveApply(_xmlWrite, endRoot, docSpecialTokens, tempPath);
+                _xmlWrite.TreeToXMLDocument(endRoot, docSpecialTokens, document, tempPath);
 
                 return _xmlWrite.FilesInZip(tempPath, Path.GetFileName(readPath), savePath);
 

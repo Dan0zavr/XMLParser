@@ -10,39 +10,39 @@ namespace XMLParser.Builders
 {
     public class BuildStyleDirector
     {
-        private StylesUniquelizer _uniquelizer;
         private TreeNode _styleRoot;
         private TreeNode _numberingRoot;
 
-        public BuildStyleDirector(StylesUniquelizer uniquelizer, TreeNode styleRoot, TreeNode numberingRoot)
+        public BuildStyleDirector(TreeNode styleRoot, TreeNode numberingRoot)
         {
-            _uniquelizer = uniquelizer;
             _styleRoot = styleRoot;
             _numberingRoot = numberingRoot;
         }
 
-        public (List<TreeNode>, List<TreeNode>) BuildAllStyles(Dictionary<IStyle, IStyleBuilder> styles)
+        public (Dictionary<StyleCategory, TreeNode>, Dictionary<StyleCategory, TreeNode>) BuildAllStyles(Dictionary<IStyle, IStyleBuilder> styles)
         {
-            List<TreeNode> stylesResult = new List<TreeNode>();
-            List<TreeNode> numberingStylesResult = new List<TreeNode>();
+            Dictionary<StyleCategory, TreeNode> stylesResult = new Dictionary<StyleCategory, TreeNode>();
+            Dictionary<StyleCategory, TreeNode> numberingStylesResult = new Dictionary<StyleCategory, TreeNode>();
             foreach (var (style, builder) in styles) 
             {
                 if(style is TextStyle || style is ParagraphStyle || style is PictureStyle)
                 {
-                    stylesResult.Add(BuildUniqueSimpleStyle(style, builder));
+                    KeyValuePair<StyleCategory, TreeNode> builtStyle = BuildUniqueSimpleStyle(style, builder);
+                    stylesResult.Add(builtStyle.Key, builtStyle.Value);
                 }
                 else if(style is TableStyle)
                 {
+                    // проблема в том что они добавляются в общий пул и стратегия не может отличить что они относятся к таблице
                     foreach(var tableStyle in BuildUniqueTableStyles((TableStyle)style, builder))
                     {
-                        stylesResult.Add(tableStyle);
+                        stylesResult.Add(tableStyle.Key, tableStyle.Value);
                     }
                 }
                 else if(style is NumberingStyle)
                 {
                     foreach(var numberingStyle in BuildUniqueNumberingStyles((NumberingStyle)style, (NumberingStyleBuilder)builder))
                     {
-                        numberingStylesResult.Add(numberingStyle);
+                        numberingStylesResult.Add(numberingStyle.Key, numberingStyle.Value);
                     }
                 }
                 else
@@ -54,51 +54,58 @@ namespace XMLParser.Builders
             return (stylesResult, numberingStylesResult);
         }
 
-        private TreeNode BuildUniqueSimpleStyle(IStyle styleParams, IStyleBuilder builder)
+        private KeyValuePair<StyleCategory, TreeNode> BuildUniqueSimpleStyle(IStyle styleParams, IStyleBuilder builder)
         {
+            StylesUniquelizer uniquelizer = new StylesUniquelizer(_styleRoot);
+            StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().ToString());
+
             TreeNode style = builder.BuildStyle(styleParams);
             TreeNode styleNode = QuikBreadthFirstSearch(style, "w:style").First();
             TreeNode nameNode = QuikBreadthFirstSearch(style, "w:name").First();
 
-            string styleName = _uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
+            string styleName = uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
 
             styleNode.Attributes["w:styleId"] = styleName;
             nameNode.Attributes["w:val"] = styleName;
 
-            return style;
+            return new KeyValuePair<StyleCategory, TreeNode>(category, style);
         }
 
-        private List<TreeNode> BuildUniqueTableStyles(TableStyle styleParams, IStyleBuilder builder) 
+        private List<KeyValuePair<StyleCategory, TreeNode>> BuildUniqueTableStyles(TableStyle styleParams, IStyleBuilder builder) 
         { 
             // строим стили
-            TreeNode tableStyle = builder.BuildStyle(styleParams);
-            TreeNode textTableStyle = BuildUniqueSimpleStyle(styleParams.TextStyle, new TextStyleBuilder());
-            TreeNode paragraphTableStyle = BuildUniqueSimpleStyle(styleParams.ParagraphStyle, new ParagraphStyleBuilder());
+            TreeNode tblStyle = builder.BuildStyle(styleParams);
+            KeyValuePair<StyleCategory, TreeNode> tableStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.TableStyle, tblStyle);
+            KeyValuePair<StyleCategory, TreeNode> textTableStyle = BuildUniqueSimpleStyle(styleParams.TextStyle, new TextStyleBuilder());
+            KeyValuePair<StyleCategory, TreeNode> paragraphTableStyle = BuildUniqueSimpleStyle(styleParams.ParagraphStyle, new ParagraphStyleBuilder());
 
             // ищем ноды в котрых заглушка
-            TreeNode textLinkInTable = QuikBreadthFirstSearch(tableStyle, "w:rStyle").First();
-            TreeNode paragraphLinkInTable = QuikBreadthFirstSearch(tableStyle, "w:pStyle").First();
+            TreeNode textLinkInTable = QuikBreadthFirstSearch(tblStyle, "w:rStyle").First();
+            TreeNode paragraphLinkInTable = QuikBreadthFirstSearch(tblStyle, "w:pStyle").First();
 
             // ищем имена стилей
-            TreeNode textTableStyleNameNode = QuikBreadthFirstSearch(textTableStyle, "w:name").First();
-            TreeNode paragraphTableStyleNameNode = QuikBreadthFirstSearch(paragraphTableStyle, "w:name").First();
+            TreeNode textTableStyleNameNode = QuikBreadthFirstSearch(textTableStyle.Value, "w:name").First();
+            TreeNode paragraphTableStyleNameNode = QuikBreadthFirstSearch(paragraphTableStyle.Value, "w:name").First();
 
             // меняем заглушку на имя стиля
             textLinkInTable.Attributes["w:val"] = textTableStyleNameNode.Attributes["w:val"];
             paragraphLinkInTable.Attributes["w:val"] = paragraphTableStyleNameNode.Attributes["w:val"];
 
-            List<TreeNode> styles = new List<TreeNode>() {tableStyle, textTableStyle, paragraphTableStyle };
+            List<KeyValuePair<StyleCategory, TreeNode>> styles = new List<KeyValuePair<StyleCategory, TreeNode>>() {tableStyle, textTableStyle, paragraphTableStyle };
 
             return styles;
         }
 
-        private List<TreeNode> BuildUniqueNumberingStyles(NumberingStyle styleParams, NumberingStyleBuilder builder)
+        private List<KeyValuePair<StyleCategory, TreeNode>> BuildUniqueNumberingStyles(NumberingStyle styleParams, NumberingStyleBuilder builder)
         {
-            TreeNode style = builder.BuildStyle(styleParams);
-            TreeNode abstractStyle = builder.BuildAbstrtactStyle(styleParams);
+            TreeNode normalStyle = builder.BuildStyle(styleParams);
+            TreeNode absStyle = builder.BuildAbstrtactStyle(styleParams);
+
+            KeyValuePair<StyleCategory, TreeNode> style = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.NumberingStyle, normalStyle);
+            KeyValuePair<StyleCategory, TreeNode> abstractStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.Useless, absStyle);
 
             (style, abstractStyle) = builder.SyncId(style, abstractStyle, _numberingRoot);
-            List<TreeNode> styles = new List<TreeNode>() {style, abstractStyle };
+            List<KeyValuePair<StyleCategory, TreeNode>> styles = new List<KeyValuePair<StyleCategory, TreeNode>>() {style, abstractStyle};
 
             return styles;
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XMLParser.Builders;
+using XMLParser.ApplyStrategies;
 
 namespace XMLParser.Styles
 {
@@ -22,9 +23,10 @@ namespace XMLParser.Styles
 
             styles.Add(TextStyle, new TextStyleBuilder());
             styles.Add(ParagraphStyle, new ParagraphStyleBuilder());
-            if(NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
-            if(TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
+            if (NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
+            if (TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
             if (PictureStyle != null) styles.Add(PictureStyle, new ParagraphStyleBuilder());
+
             return styles;
         }
     }

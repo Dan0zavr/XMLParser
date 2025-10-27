@@ -39,10 +39,10 @@ namespace XMLParser
             return newFileName;
         }
 
-        public void SerializeStyle(TreeNode root, List<string> specialTokens, string tempFolder)
+        public void TreeToXMLDocument(TreeNode root, List<string> specialTokens, string docName, string tempFolder)
         {
             string serializedTree = SerializeNode(root, specialTokens);
-            StringToXMLDocument(serializedTree, styles, tempFolder);
+            StringToXMLDocument(serializedTree, docName, tempFolder);
         }
 
         public string SerializeNode(TreeNode treeNode, List<string> specialTokens = null)

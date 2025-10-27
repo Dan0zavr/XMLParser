@@ -9,11 +9,11 @@ namespace XMLParser
 {
     public class StylesUniquelizer
     {
-        public required List<string> Names = new List<string>();
+        public List<string> Names = new List<string>();
 
-        public StylesUniquelizer(TreeNode root, string tag) 
+        public StylesUniquelizer(TreeNode root) 
         {
-            List<TreeNode> nodes = LongBreadthFirstSearch(root, tag);
+            List<TreeNode> nodes = LongBreadthFirstSearch(root, "w:style");
 
             foreach (TreeNode node in nodes) 
             {
