@@ -25,17 +25,14 @@ namespace XMLParser
         {
             string baseName = startName; // Базовое имя стиля
             string styleName = baseName; // Начинаем с базового имени
-            int counter = 1; // Счетчик для добавления суффикса
+            int counter = 1; // Счетчик для добавления суффикса 
 
-            foreach(var name in Names)
-            {  
-                if (name == styleName)
-                {
-                    styleName = baseName + counter++;
-                    Names.Add(styleName);
-                }
+            while (Names.Contains(styleName))
+            {
+                styleName = baseName + counter++;
             }
 
+            Names.Add(styleName);
             return styleName;
         }
     }

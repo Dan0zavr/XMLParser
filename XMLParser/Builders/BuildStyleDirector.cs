@@ -12,11 +12,13 @@ namespace XMLParser.Builders
     {
         private TreeNode _styleRoot;
         private TreeNode _numberingRoot;
+        private StylesUniquelizer _uniquelizer;
 
-        public BuildStyleDirector(TreeNode styleRoot, TreeNode numberingRoot)
+        public BuildStyleDirector(TreeNode styleRoot, TreeNode numberingRoot, StylesUniquelizer uniquelizer)
         {
             _styleRoot = styleRoot;
             _numberingRoot = numberingRoot;
+            _uniquelizer = uniquelizer;
         }
 
         public (Dictionary<StyleCategory, TreeNode>, Dictionary<StyleCategory, TreeNode>) BuildAllStyles(Dictionary<IStyle, IStyleBuilder> styles)
@@ -32,7 +34,6 @@ namespace XMLParser.Builders
                 }
                 else if(style is TableStyle)
                 {
-                    // проблема в том что они добавляются в общий пул и стратегия не может отличить что они относятся к таблице
                     foreach(var tableStyle in BuildUniqueTableStyles((TableStyle)style, builder))
                     {
                         stylesResult.Add(tableStyle.Key, tableStyle.Value);
@@ -56,13 +57,12 @@ namespace XMLParser.Builders
 
         private KeyValuePair<StyleCategory, TreeNode> BuildUniqueSimpleStyle(IStyle styleParams, IStyleBuilder builder)
         {
-            StylesUniquelizer uniquelizer = new StylesUniquelizer(_styleRoot);
             StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().Name.ToString());
 
             TreeNode style = builder.BuildStyle(styleParams);
             TreeNode nameNode = QuikBreadthFirstSearch(style, "w:name").First();
 
-            string styleName = uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
+            string styleName = _uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
 
             style.Attributes["w:styleId"] = styleName;
             nameNode.Attributes["w:val"] = styleName;

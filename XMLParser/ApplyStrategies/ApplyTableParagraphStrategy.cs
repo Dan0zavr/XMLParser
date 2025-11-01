@@ -23,7 +23,7 @@ namespace XMLParser.ApplyStrategies
 
                 TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
 
-                ApplyStylesToNodes(root, tagName, applyStyle);
+                ApplyStylesToNodes(cell, tagName, applyStyle);
             }
         }
     }

@@ -25,7 +25,7 @@ namespace XMLParser
                 var (styleRoot, styleSpecialTokens) = ReadXMLDocument(styles, tempPath);
                 var (numberingRoot, numberingSpecialTokens) = ReadXMLDocument(numbering, tempPath);
 
-                BuildStyleDirector buildDirector = new BuildStyleDirector(styleRoot, numberingRoot);
+                BuildStyleDirector buildDirector = new BuildStyleDirector(styleRoot, numberingRoot, new StylesUniquelizer(styleRoot));
                 // для styles.xml  для numbering.xml
                 (var inStyles, var inNumbering) = buildDirector.BuildAllStyles(template.GetStyles());
                 Dictionary<StyleCategory, TreeNode> allStyles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);

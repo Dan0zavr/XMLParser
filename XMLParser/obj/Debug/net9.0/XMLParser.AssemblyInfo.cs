@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XMLParser")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b048a4565e611cb112e9dbe9509083df84f02677")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+381aece6c66eb241b8b73342b99972c52baa3034")]
 [assembly: System.Reflection.AssemblyProductAttribute("XMLParser")]
 [assembly: System.Reflection.AssemblyTitleAttribute("XMLParser")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
