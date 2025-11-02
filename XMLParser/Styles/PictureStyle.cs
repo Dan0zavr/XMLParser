@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace XMLParser.Styles
 {
-    public class PictureStyle : IStyle
+    public class PictureStyle : ParagraphStyle, IStyle
     {
         public string StyleType => "PictureStyle";
 
@@ -14,5 +14,6 @@ namespace XMLParser.Styles
         public string LableAllignment { get; set; }
         public bool AutoGenerateLable { get; set; }
         public string? LabelValue { get; set; } 
+        public ParagraphStyle PictureParagraphStyle { get; set; }
     }
 }

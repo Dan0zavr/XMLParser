@@ -143,6 +143,7 @@ namespace XMLParser
             root.Children = newRoot;
         }
 
+        //ключ соответствует номеру абзаца, начиная с 0
         public static Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
         {
             List<TreeNode> paragraphs = LongBreadthFirstSearch(root, "w:p");
@@ -179,9 +180,9 @@ namespace XMLParser
             return nonStyleParagraphs;
         }
 
-        private static List<TreeNode> SeparateText(List<TreeNode> textParagraphs, List<TreeNode> paragraphsOneNumber, TreeNode paragraphStyle)
+        private static List<TreeNode> SeparateText(List<TreeNode> textParagraphs, List<TreeNode> sameKeysParagraphs, TreeNode paragraphStyle)
         {
-            if (textParagraphs.Count == 0) return paragraphsOneNumber;
+            if (textParagraphs.Count == 0) return sameKeysParagraphs;
 
             var textPackage = new TreeNode()
             {
@@ -190,13 +191,13 @@ namespace XMLParser
                 Children = new List<TreeNode> { paragraphStyle.Clone() } // Копия списка
             };
             textPackage.Children.AddRange(textParagraphs);
-            paragraphsOneNumber.Add(textPackage);
-            return paragraphsOneNumber;
+            sameKeysParagraphs.Add(textPackage);
+            return sameKeysParagraphs;
         }
 
-        private static (List<TreeNode> textParagraphs, List<TreeNode> paragrahpsOneNumber) SeparateDrawings(KeyValuePair<int, TreeNode> paragraph, TreeNode paragraphStyle)
+        private static (List<TreeNode> textParagraphs, List<TreeNode> sameKeysParagraphs) SeparateDrawings(KeyValuePair<int, TreeNode> paragraph, TreeNode paragraphStyle)
         {
-            List<TreeNode> paragraphsOneNumber = new List<TreeNode>(); // Список абзацев с одним номером
+            List<TreeNode> sameKeysParagraphs = new List<TreeNode>(); // Список абзацев с одним номером
             List<TreeNode> textParagraphs = new List<TreeNode>(); // Список для текстовых абзацев
 
             for (int i = 0; i < paragraph.Value.Children.Count; i++)
@@ -206,20 +207,20 @@ namespace XMLParser
                 if (child.Children.Any(c => c.TagName == "w:drawing"))
                 {
                     // Если перед рисунком был текст, создаем новый текстовый абзац
-                    paragraphsOneNumber = SeparateText(textParagraphs, paragraphsOneNumber, paragraphStyle);
+                    sameKeysParagraphs = SeparateText(textParagraphs, sameKeysParagraphs, paragraphStyle);
                     textParagraphs.Clear();
 
                     // Создаем отдельный абзац для рисунка
                     TreeNode drawingPackage = CreateParagraphForDrawing(paragraphStyle, child);
 
-                    paragraphsOneNumber.Add(drawingPackage);
+                    sameKeysParagraphs.Add(drawingPackage);
                 }
                 else
                 {
                     textParagraphs.Add(child);
                 }
             }
-            return (textParagraphs, paragraphsOneNumber);
+            return (textParagraphs, sameKeysParagraphs);
         }
 
         private static TreeNode CreateParagraphForDrawing(TreeNode paragraphStyle, TreeNode child)
@@ -243,12 +244,12 @@ namespace XMLParser
 
             foreach (var paragraph in nonStyleParagraphs)
             {
-                var (textParagraphs, paragrahpsOneNumber) = SeparateDrawings(paragraph, paragraphStyle);
+                var (textParagraphs, sameKeysParagraphs) = SeparateDrawings(paragraph, paragraphStyle);
 
                 // Если остался текст без рисунков, добавляем его в отдельный абзац
-                paragrahpsOneNumber = SeparateText(textParagraphs, paragrahpsOneNumber, paragraphStyle);
+                sameKeysParagraphs = SeparateText(textParagraphs, sameKeysParagraphs, paragraphStyle);
 
-                splittedParagraphs.Add(paragraph.Key, paragrahpsOneNumber);
+                splittedParagraphs.Add(paragraph.Key, sameKeysParagraphs);
             }
 
             return splittedParagraphs;

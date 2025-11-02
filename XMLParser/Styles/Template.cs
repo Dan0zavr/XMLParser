@@ -15,7 +15,7 @@ namespace XMLParser.Styles
         public required ParagraphStyle ParagraphStyle { get; set; }
         public NumberingStyle? NumberingStyle { get; set; }
         public TableStyle? TableStyle { get; set; }
-        public ParagraphStyle? PictureStyle { get; set; }
+        public PictureStyle? PictureStyle { get; set; }
 
         public Dictionary<IStyle, IStyleBuilder> GetStyles()
         {
@@ -25,7 +25,7 @@ namespace XMLParser.Styles
             styles.Add(ParagraphStyle, new ParagraphStyleBuilder());
             if (NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
             if (TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
-            if (PictureStyle != null) styles.Add(PictureStyle, new ParagraphStyleBuilder());
+            if (PictureStyle != null) styles.Add(PictureStyle, new PictureStyleBuilder());
 
             return styles;
         }

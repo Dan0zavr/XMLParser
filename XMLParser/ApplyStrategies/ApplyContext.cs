@@ -38,6 +38,8 @@ namespace XMLParser.ApplyStrategies
                     return new ApplyTableParagraphStrategy();
                 case StyleCategory.NumberingStyle:
                     return new ApplyNumberingStyleStrategy();
+                case StyleCategory.PictureStyle:
+                    return new ApplyPictureStyleStrategy();
                 case StyleCategory.Useless:
                     return new UselessStrategy();
                 default:
