@@ -13,7 +13,7 @@ namespace XMLParser
 
         public StylesUniquelizer(TreeNode root) 
         {
-            List<TreeNode> nodes = LongBreadthFirstSearch(root, "w:style");
+            List<TreeNode> nodes = root.LongBreadthFirstSearch("w:style");
 
             foreach (TreeNode node in nodes) 
             {

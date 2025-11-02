@@ -24,11 +24,11 @@ namespace XMLParser
             };
         }
 
-        private static TreeNode? CheckChild(TreeNode node, string tagName)
+        private TreeNode? CheckChild(string tagName)
         {
-            if (node.Children.Count != 0)
+            if (Children.Count != 0)
             {
-                foreach (TreeNode child in node.Children)
+                foreach (TreeNode child in Children)
                 {
                     if (child.TagName == tagName)
                     {
@@ -40,18 +40,18 @@ namespace XMLParser
         }
 
         //Применяется когда искомые теги не могут идти подряд
-        public static List<TreeNode> QuikBreadthFirstSearch(TreeNode tree, string tagName)
+        public List<TreeNode> QuikBreadthFirstSearch(string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
-            queue.Enqueue(tree);
+            queue.Enqueue(this);
 
             while (queue.Count > 0)
             {
                 TreeNode currentNode = queue.Dequeue();
-                if (CheckChild(currentNode, tagName) != null)
+                if (currentNode.CheckChild(tagName) != null)
                 {
-                    tags.Add(CheckChild(currentNode, tagName));
+                    tags.Add(currentNode.CheckChild(tagName));
                 }
                 else
                 {
@@ -66,11 +66,11 @@ namespace XMLParser
         }
 
         //Применяется когда искомые теги могут идти подряд
-        public static List<TreeNode> LongBreadthFirstSearch(TreeNode tree, string tagName)
+        public List<TreeNode> LongBreadthFirstSearch(string tagName)
         {
             List<TreeNode> tags = new List<TreeNode>();
             Queue<TreeNode> queue = new Queue<TreeNode>();
-            queue.Enqueue(tree);
+            queue.Enqueue(this);
 
             while (queue.Count > 0)
             {

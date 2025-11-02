@@ -24,7 +24,7 @@ namespace XMLParser.ApplyStrategies
 
         protected void ApplyStylesToNodes(TreeNode root, string tagName, TreeNode styleToApply)
         {
-            List<TreeNode> foundedParents = QuikBreadthFirstSearch(root, tagName);
+            List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(tagName);
 
             for (int i = 0; i < foundedParents.Count; i++)
             {

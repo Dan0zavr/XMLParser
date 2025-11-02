@@ -53,7 +53,7 @@ namespace XMLParser.Builders
             string abstractStyleId = EnsureUniqueNumberingId(root);
             string styleId = EnsureUniqueNumberingId(root);
 
-            TreeNode abstractNum = QuikBreadthFirstSearch(abstractStyle.Value, "w:abstractNum").FirstOrDefault();
+            TreeNode abstractNum = abstractStyle.Value.QuikBreadthFirstSearch("w:abstractNum").FirstOrDefault();
 
             if (abstractNum != null)
             {
@@ -66,7 +66,7 @@ namespace XMLParser.Builders
 
             style.Value.Attributes["w:numId"] = styleId;
 
-            TreeNode abstractNumIdInStyle = QuikBreadthFirstSearch(style.Value, "w:abstractNumId").FirstOrDefault();
+            TreeNode abstractNumIdInStyle = style.Value.QuikBreadthFirstSearch("w:abstractNumId").FirstOrDefault();
 
             if (abstractNumIdInStyle != null) 
             {
@@ -117,7 +117,7 @@ namespace XMLParser.Builders
             int counter = 0;
             string id = counter.ToString();
 
-            List<TreeNode> styles = LongBreadthFirstSearch(root, "w:abstractNum");
+            List<TreeNode> styles = root.LongBreadthFirstSearch("w:abstractNum");
 
             foreach (var style in styles)
             {

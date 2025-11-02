@@ -15,7 +15,7 @@ namespace XMLParser.ApplyStrategies
 
             foreach (var paragraph in paragraphsWithDrawings)
             {
-                List<TreeNode> oldStyle = QuikBreadthFirstSearch(paragraph, "w:pPr");
+                List<TreeNode> oldStyle = paragraph.QuikBreadthFirstSearch("w:pPr");
 
                 paragraph.TerminateChildren(oldStyle);
 
@@ -30,7 +30,7 @@ namespace XMLParser.ApplyStrategies
 
         private List<TreeNode> ExtractPicturesFromParagraphToList(TreeNode root)
         {
-            List<TreeNode> paragraphs = LongBreadthFirstSearch(root, "w:p");
+            List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
             List<TreeNode> paragraphsWithPic = new List<TreeNode>();
 
             //проход по <w:p>

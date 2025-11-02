@@ -15,7 +15,7 @@ namespace XMLParser.ApplyStrategies
             string styleTagName = "w:rStyle";
             string tagName = "w:rPr";
 
-            List<TreeNode> cells = LongBreadthFirstSearch(root, "w:tc");
+            List<TreeNode> cells = root.LongBreadthFirstSearch("w:tc");
 
             foreach (TreeNode cell in cells)
             {
