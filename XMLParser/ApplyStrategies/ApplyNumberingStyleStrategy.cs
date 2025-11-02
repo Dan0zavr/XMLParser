@@ -31,7 +31,7 @@ namespace XMLParser.ApplyStrategies
             children.Add(numberingStyle);
 
             List<TreeNode> foundedParents = new List<TreeNode>();
-            foundedParents = QuikBreadthFirstSearch(root, "w:numPr");
+            foundedParents = root.QuikBreadthFirstSearch("w:numPr");
 
             root.AddChildren(foundedParents, children);
         }

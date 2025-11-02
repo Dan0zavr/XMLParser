@@ -69,11 +69,11 @@ namespace XMLParser
 
         private static bool TryFindPageBreak(TreeNode paragraph, out TreeNode sectionProperties)
         {
-            sectionProperties = QuikBreadthFirstSearch(paragraph, "w:sectPr").FirstOrDefault();
+            sectionProperties = paragraph.QuikBreadthFirstSearch("w:sectPr").FirstOrDefault();
             if (sectionProperties != null)
                 return true;
 
-            foreach (TreeNode breakNode in QuikBreadthFirstSearch(paragraph, "w:br"))
+            foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch("w:br"))
             {
                 if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
                 {
@@ -146,7 +146,7 @@ namespace XMLParser
         //ключ соответствует номеру абзаца, начиная с 0
         public static Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
         {
-            List<TreeNode> paragraphs = LongBreadthFirstSearch(root, "w:p");
+            List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
             Dictionary<int, TreeNode> paragraphsWithPic = new Dictionary<int, TreeNode>();
 
             //проход по <w:p>
@@ -257,7 +257,7 @@ namespace XMLParser
 
         private static TreeNode ExtractStyle(TreeNode parent, string styleTagName)
         {
-            List<TreeNode> extractedStyles = QuikBreadthFirstSearch(parent, styleTagName);
+            List<TreeNode> extractedStyles = parent.QuikBreadthFirstSearch(styleTagName);
 
             if (extractedStyles.Count == 1) return extractedStyles[0];
             else return null;
@@ -269,7 +269,7 @@ namespace XMLParser
             var (root, specialTokens) = XMLParser.XMLRead.ReadXMLDocument(document, tempFolder);
 
             // Поиск всех родительских элементов с указанным именем
-            List<TreeNode> foundedParents = QuikBreadthFirstSearch(root, parentName);
+            List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(parentName);
 
             // Обработка каждого родительского элемента
             foreach (var parent in foundedParents)

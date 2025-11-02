@@ -60,7 +60,8 @@ namespace XMLParser.Builders
             StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().Name.ToString());
 
             TreeNode style = builder.BuildStyle(styleParams);
-            TreeNode nameNode = QuikBreadthFirstSearch(style, "w:name").First();
+            TreeNode styleNode = style.QuikBreadthFirstSearch("w:style").First();
+            TreeNode nameNode = style.QuikBreadthFirstSearch("w:name").First();
 
             string styleName = _uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
 
@@ -79,12 +80,12 @@ namespace XMLParser.Builders
             KeyValuePair<StyleCategory, TreeNode> paragraphTableStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.TableParagraphStyle, BuildUniqueSimpleStyle(styleParams.ParagraphStyle, new ParagraphStyleBuilder()).Value);
 
             // ищем ноды в котрых заглушка
-            TreeNode textLinkInTable = QuikBreadthFirstSearch(tblStyle, "w:rStyle").First();
-            TreeNode paragraphLinkInTable = QuikBreadthFirstSearch(tblStyle, "w:pStyle").First();
+            TreeNode textLinkInTable = tblStyle.QuikBreadthFirstSearch("w:rStyle").First();
+            TreeNode paragraphLinkInTable = tblStyle.QuikBreadthFirstSearch("w:pStyle").First();
 
             // ищем имена стилей
-            TreeNode textTableStyleNameNode = QuikBreadthFirstSearch(textTableStyle.Value, "w:name").First();
-            TreeNode paragraphTableStyleNameNode = QuikBreadthFirstSearch(paragraphTableStyle.Value, "w:name").First();
+            TreeNode textTableStyleNameNode = textTableStyle.Value.QuikBreadthFirstSearch("w:name").First();
+            TreeNode paragraphTableStyleNameNode = paragraphTableStyle.Value.QuikBreadthFirstSearch("w:name").First();
 
             // меняем заглушку на имя стиля
             textLinkInTable.Attributes["w:val"] = textTableStyleNameNode.Attributes["w:val"];

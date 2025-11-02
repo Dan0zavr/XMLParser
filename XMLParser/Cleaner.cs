@@ -32,13 +32,13 @@ namespace XMLParser
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
-            foundedParents = QuikBreadthFirstSearch(root, rPrTagName);
+            foundedParents = root.QuikBreadthFirstSearch(rPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = QuikBreadthFirstSearch(root, pPrTagName);
+            foundedParents = root.QuikBreadthFirstSearch(pPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = QuikBreadthFirstSearch(root, numPrTagName);
+            foundedParents = root.QuikBreadthFirstSearch(numPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = QuikBreadthFirstSearch(root, tblPrTagName);
+            foundedParents = root.QuikBreadthFirstSearch(tblPrTagName);
             root.TerminateChildren(foundedParents);
 
             FillMissingTags(runBlockTagName, root);
@@ -50,15 +50,15 @@ namespace XMLParser
         {
             List<TreeNode> foundedCells = new List<TreeNode>();
 
-            foundedCells = LongBreadthFirstSearch(root, tablecellTagName);
+            foundedCells = root.LongBreadthFirstSearch(tablecellTagName);
 
             foreach (var cell in foundedCells)
             {
                 List<TreeNode> foundedParents = new List<TreeNode>();
 
-                foundedParents = QuikBreadthFirstSearch(cell, rPrTagName);
+                foundedParents = cell.QuikBreadthFirstSearch(rPrTagName);
                 root.TerminateChildren(foundedParents);
-                foundedParents = QuikBreadthFirstSearch(cell, pPrTagName);
+                foundedParents = cell.QuikBreadthFirstSearch(pPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
@@ -68,7 +68,7 @@ namespace XMLParser
 
         public static void FillMissingTags(string parentTagName, TreeNode root)
         {
-            List<TreeNode> runBlocks = LongBreadthFirstSearch(root, parentTagName);
+            List<TreeNode> runBlocks = root.LongBreadthFirstSearch(parentTagName);
             foreach (var block in runBlocks)
             {
                 if (!block.Children.Any(child => child.TagName == rPrTagName))
