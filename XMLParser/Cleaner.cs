@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.Styles;
 using static XMLParser.TreeNode;
 
 namespace XMLParser
@@ -16,19 +17,7 @@ namespace XMLParser
         private const string tablecellTagName = "w:tc";
         private const string runBlockTagName = "w:r";
 
-        private static TreeNode CreateRPrTag()
-        {
-            return new TreeNode()
-            {
-                TagName = rPrTagName,
-                CloseTag = true,
-                Attributes = new Dictionary<string, string>(),
-                Values = new List<string>(),
-                Children = new List<TreeNode>()
-            };
-        }
-
-        public static TreeNode CleanHandStyles(TreeNode root, List<string> specialTokens, string savePath)
+        public static TreeNode CleanHandStyles(TreeNode root, Template template, List<string> specialTokens, string savePath)
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
@@ -36,11 +25,16 @@ namespace XMLParser
             root.TerminateChildren(foundedParents);
             foundedParents = root.QuikBreadthFirstSearch(pPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(numPrTagName);
-            root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(tblPrTagName);
-            root.TerminateChildren(foundedParents);
 
+            if (template.NumberingStyle != null) {
+                foundedParents = root.QuikBreadthFirstSearch(numPrTagName);
+                root.TerminateChildren(foundedParents);
+            }
+
+            if (template.TableStyle != null) {
+                foundedParents = root.QuikBreadthFirstSearch(tblPrTagName);
+                root.TerminateChildren(foundedParents);
+            }
             FillMissingTags(runBlockTagName, root);
 
             return root;
@@ -63,7 +57,6 @@ namespace XMLParser
             }
 
             return root;
-
         }
 
         public static void FillMissingTags(string parentTagName, TreeNode root)
@@ -79,6 +72,18 @@ namespace XMLParser
                     block.Children.AddRange(children);
                 }
             }
+        }
+
+        private static TreeNode CreateRPrTag()
+        {
+            return new TreeNode()
+            {
+                TagName = rPrTagName,
+                CloseTag = true,
+                Attributes = new Dictionary<string, string>(),
+                Values = new List<string>(),
+                Children = new List<TreeNode>()
+            };
         }
 
     }

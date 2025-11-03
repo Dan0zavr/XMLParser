@@ -42,16 +42,15 @@ namespace XMLParser
 
                 if (template.PictureStyle != null)
                 {
-                    Dictionary<int, List<TreeNode>> name = SplitParagraphsWithDrawings(ExtractPicturesFromParagraphToDictionary(content));
+                    Dictionary<int, TreeNode> paragraphsWithPictures = ExtractPicturesFromParagraphToDictionary(content);
 
-                    if (name != null)
+                    if (paragraphsWithPictures != null)
                     {
-                        //Выделение картинок в отдельные абзацы
-                        ReconstructParagraphs(content, name);
+                        ReconstructParagraphs(content, SeparateDrawingsAndText(paragraphsWithPictures));
                     }
                 }
 
-                CleanHandStyles(content, docSpecialTokens, savePath);
+                CleanHandStyles(content, template, docSpecialTokens, savePath);
 
                 // применение стилей
                 ApplyContext applyContext = new ApplyContext();

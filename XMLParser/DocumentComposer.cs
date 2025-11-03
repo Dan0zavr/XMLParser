@@ -83,17 +83,6 @@ namespace XMLParser
             return false;
         }
 
-        private static TreeNode CreateBodyNode(List<TreeNode> children)
-        {
-            TreeNode node = new TreeNode
-            {
-                TagName = "w:body",
-                CloseTag = true,
-                Children = children
-            };
-            return node;
-        }
-
         private static TreeNode DuplicateNodeWithAttributes(TreeNode node)
         {
             TreeNode duplicatedNode = new TreeNode
@@ -119,184 +108,141 @@ namespace XMLParser
             return mainTag;
         }
 
-        public static void ReconstructParagraphs(TreeNode root, Dictionary<int, List<TreeNode>> extensiveParagrahps)
-        {
-            List<TreeNode> newRoot = new List<TreeNode>();
-            List<TreeNode> oldParagraphs = root.Children;
-
-            for (int i = 0; i < oldParagraphs.Count; i++)
-            {
-                if (extensiveParagrahps.Any(c => c.Key == i))
-                {
-                    foreach (var paragraph in extensiveParagrahps[i])
-                    {
-                        newRoot.Add(paragraph);
-                    }
-                }
-                else
-                {
-                    newRoot.Add(oldParagraphs[i]);
-                }
-            }
-
-            root.Children.Clear();
-            root.Children = newRoot;
-        }
-
         //ключ соответствует номеру абзаца, начиная с 0
-        public static Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode root)
+        public static Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode body)
         {
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
+            List<TreeNode> paragraphs = body.Children;
             Dictionary<int, TreeNode> paragraphsWithPic = new Dictionary<int, TreeNode>();
 
             //проход по <w:p>
             for (int i = 0; i < paragraphs.Count; i++)
             {
-                //грубо говоря проход по <w:r>
-                for (int j = 0; j < paragraphs[i].Children.Count; j++)
+                List<TreeNode> drawings = paragraphs[i].LongBreadthFirstSearch("w:drawing");
+                if(drawings.Count > 0)
                 {
-                    //поиск <w:drawing>
-                    for (int k = 0; k < paragraphs[i].Children[j].Children.Count; k++)
-                    {
-                        if (paragraphs[i].Children[j].Children[k].TagName == "w:drawing")
-                        {
-                            paragraphsWithPic.Add(i, paragraphs[i]);
-                            break;
-                        }
-                    }
+                    paragraphsWithPic.Add(i, paragraphs[i]);
                 }
             }
             return paragraphsWithPic;
         }
 
-        private static Dictionary<int, TreeNode> ClearParagraphsStyle(Dictionary<int, TreeNode> paragraphs)
+        public static void ReconstructParagraphs(TreeNode body, Dictionary<int, List<TreeNode>> extendedParagraphs)
         {
-            Dictionary<int, TreeNode> nonStyleParagraphs = new Dictionary<int, TreeNode>();
-            foreach (var paragraph in paragraphs)
+            List<TreeNode> paragraphs = body.Children;
+            Queue<TreeNode> newParagrapsStructure = new Queue<TreeNode>();
+            for (int i = 0; i < paragraphs.Count; i++)
             {
-                paragraph.Value.TerminateSpecialCildren(paragraph.Value, "w:pPr");
-                nonStyleParagraphs.Add(paragraph.Key, paragraph.Value);
-            }
-            return nonStyleParagraphs;
-        }
-
-        private static List<TreeNode> SeparateText(List<TreeNode> textParagraphs, List<TreeNode> sameKeysParagraphs, TreeNode paragraphStyle)
-        {
-            if (textParagraphs.Count == 0) return sameKeysParagraphs;
-
-            var textPackage = new TreeNode()
-            {
-                TagName = "w:p",
-                CloseTag = true,
-                Children = new List<TreeNode> { paragraphStyle.Clone() } // Копия списка
-            };
-            textPackage.Children.AddRange(textParagraphs);
-            sameKeysParagraphs.Add(textPackage);
-            return sameKeysParagraphs;
-        }
-
-        private static (List<TreeNode> textParagraphs, List<TreeNode> sameKeysParagraphs) SeparateDrawings(KeyValuePair<int, TreeNode> paragraph, TreeNode paragraphStyle)
-        {
-            List<TreeNode> sameKeysParagraphs = new List<TreeNode>(); // Список абзацев с одним номером
-            List<TreeNode> textParagraphs = new List<TreeNode>(); // Список для текстовых абзацев
-
-            for (int i = 0; i < paragraph.Value.Children.Count; i++)
-            {
-                TreeNode child = paragraph.Value.Children[i];
-
-                if (child.Children.Any(c => c.TagName == "w:drawing"))
+                if (extendedParagraphs.ContainsKey(i))
                 {
-                    // Если перед рисунком был текст, создаем новый текстовый абзац
-                    sameKeysParagraphs = SeparateText(textParagraphs, sameKeysParagraphs, paragraphStyle);
-                    textParagraphs.Clear();
-
-                    // Создаем отдельный абзац для рисунка
-                    TreeNode drawingPackage = CreateParagraphForDrawing(paragraphStyle, child);
-
-                    sameKeysParagraphs.Add(drawingPackage);
+                    foreach (var extendedParagraph in extendedParagraphs[i])
+                    {
+                        newParagrapsStructure.Enqueue(extendedParagraph);
+                    }
                 }
                 else
                 {
-                    textParagraphs.Add(child);
+                    newParagrapsStructure.Enqueue(paragraphs[i]);
                 }
             }
-            return (textParagraphs, sameKeysParagraphs);
+
+            body.Children.Clear();
+
+            while (newParagrapsStructure.Count > 0)
+            {
+                body.Children.Add(newParagrapsStructure.Dequeue());
+            }
         }
 
-        private static TreeNode CreateParagraphForDrawing(TreeNode paragraphStyle, TreeNode child)
+        public static Dictionary<int, List<TreeNode>> SeparateDrawingsAndText(Dictionary<int, TreeNode> paragraphs)
         {
-            var drawingPackage = new TreeNode()
+            Dictionary<int, List<TreeNode>> separatedParagraphs = new Dictionary<int, List<TreeNode>>();
+
+            foreach (var paragraph in paragraphs) 
+            {
+                //сохраняем стиль абзаца
+                TreeNode paragraphStyleNode = ExtractStyle(paragraph.Value, "w:pPr");
+
+                //сюда добавляются разделенные текстовые запуки (тег "w:r")
+                TreeNode textParagraph = CreateParagraphNode();
+
+                List<TreeNode> sameNumberParagraphs = new List<TreeNode>();
+
+                foreach (var runNode in paragraph.Value.QuikBreadthFirstSearch("w:r"))
+                {
+                    if (runNode.CheckChild("w:drawing", out TreeNode foundedChild))
+                    {
+                        CloseTextParagraph(sameNumberParagraphs, textParagraph);
+                        TreeNode drawingParagraph = CreateParagraphNode();
+
+                        drawingParagraph.Children.Add(runNode);
+                        drawingParagraph.Children.Insert(0, paragraphStyleNode);
+                        sameNumberParagraphs.Add(drawingParagraph);
+                    }
+                    else
+                    {
+                       textParagraph.Children.Add(runNode);
+                    }
+
+                    CloseTextParagraph(sameNumberParagraphs, textParagraph);
+                }
+                separatedParagraphs.Add(paragraph.Key, sameNumberParagraphs);
+            }
+
+            return separatedParagraphs;
+        }
+
+        //добавляет абзац в список с одинаковым номером и очищает его потомков
+        private static void CloseTextParagraph(List<TreeNode> sameNumberParagraphs, TreeNode textParagraph)
+        {
+            if (textParagraph.Children.Count > 0)
+            {
+                sameNumberParagraphs.Add(textParagraph.Clone());
+                textParagraph.Children.Clear();
+            }
+        }
+
+        private static TreeNode CreateParagraphNode()
+        {
+            return new TreeNode()
             {
                 TagName = "w:p",
                 CloseTag = true,
-                Children = new List<TreeNode> { paragraphStyle.Clone(), child.Clone() }
+                Children = new List<TreeNode>()
             };
-            return drawingPackage;
         }
 
-        public static Dictionary<int, List<TreeNode>> SplitParagraphsWithDrawings(Dictionary<int, TreeNode> paragraphs)
+        private static TreeNode CreateParagraphStyleNode()
         {
-            if (paragraphs.Count == 0) return null;
-
-            Dictionary<int, List<TreeNode>> splittedParagraphs = new Dictionary<int, List<TreeNode>>();
-            TreeNode paragraphStyle = ExtractStyle(paragraphs.Values.First(), "w:pPr");
-            Dictionary<int, TreeNode> nonStyleParagraphs = ClearParagraphsStyle(paragraphs);
-
-            foreach (var paragraph in nonStyleParagraphs)
+            return new TreeNode()
             {
-                var (textParagraphs, sameKeysParagraphs) = SeparateDrawings(paragraph, paragraphStyle);
+                TagName = "w:pPr",
+                CloseTag = true,
+                Children = new List<TreeNode>()
+            };
+        }
 
-                // Если остался текст без рисунков, добавляем его в отдельный абзац
-                sameKeysParagraphs = SeparateText(textParagraphs, sameKeysParagraphs, paragraphStyle);
-
-                splittedParagraphs.Add(paragraph.Key, sameKeysParagraphs);
-            }
-
-            return splittedParagraphs;
+        private static TreeNode CreateBodyNode(List<TreeNode> children)
+        {
+            return new TreeNode
+            {
+                TagName = "w:body",
+                CloseTag = true,
+                Children = children
+            };
         }
 
         private static TreeNode ExtractStyle(TreeNode parent, string styleTagName)
         {
             List<TreeNode> extractedStyles = parent.QuikBreadthFirstSearch(styleTagName);
 
-            if (extractedStyles.Count == 1) return extractedStyles[0];
-            else return null;
-        }
-
-        public static void CorrectParagraphChildren(string parentName, string tempFolder)
-        {
-            // Чтение XML-документа
-            var (root, specialTokens) = XMLParser.XMLRead.ReadXMLDocument(document, tempFolder);
-
-            // Поиск всех родительских элементов с указанным именем
-            List<TreeNode> foundedParents = root.QuikBreadthFirstSearch(parentName);
-
-            // Обработка каждого родительского элемента
-            foreach (var parent in foundedParents)
+            if (extractedStyles.Count == 1)
             {
-                // Пропускаем, если нет дочерних элементов
-                if (parent.Children.Count == 0)
-                {
-                    continue;
-                }
-
-                // Находим первый элемент <w:pStyle> (если он есть)
-                var pStyleNode = parent.Children.FirstOrDefault(child => child.TagName == "w:pStyle");
-
-                if (pStyleNode != null)
-                {
-
-                    // Удаляем <w:pStyle> из текущей позиции
-                    parent.Children.Remove(pStyleNode);
-
-                    // Вставляем <w:pStyle> на первое место
-                    parent.Children.Insert(0, pStyleNode);
-                }
+                return extractedStyles[0];
             }
-
-            // Сериализация и десериализация дерева
-            //string serializedTree = xmlRead.SerializeNode(root, specialTokens);
-            //xmlRead.StringToXMLDocument(serializedTree, document, tempFolder);
+            else
+            {
+                return CreateParagraphStyleNode();
+            }
         }
     }
 }

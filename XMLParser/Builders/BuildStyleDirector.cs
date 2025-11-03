@@ -10,9 +10,9 @@ namespace XMLParser.Builders
 {
     public class BuildStyleDirector
     {
-        private TreeNode _styleRoot;
-        private TreeNode _numberingRoot;
-        private StylesUniquelizer _uniquelizer;
+        private readonly TreeNode _styleRoot;
+        private readonly TreeNode _numberingRoot;
+        private readonly StylesUniquelizer _uniquelizer;
 
         public BuildStyleDirector(TreeNode styleRoot, TreeNode numberingRoot, StylesUniquelizer uniquelizer)
         {
@@ -59,16 +59,15 @@ namespace XMLParser.Builders
         {
             StyleCategory category = Enum.Parse<StyleCategory>(styleParams.GetType().Name.ToString());
 
-            TreeNode style = builder.BuildStyle(styleParams);
-            TreeNode styleNode = style.QuikBreadthFirstSearch("w:style").First();
-            TreeNode nameNode = style.QuikBreadthFirstSearch("w:name").First();
+            TreeNode styleNode = builder.BuildStyle(styleParams);
+            TreeNode nameNode = styleNode.QuikBreadthFirstSearch("w:name").First();
 
             string styleName = _uniquelizer.EnsureUniqueStyleName(_styleRoot, "w:style", "WordRegSimpleStyle");
 
-            style.Attributes["w:styleId"] = styleName;
+            styleNode.Attributes["w:styleId"] = styleName;
             nameNode.Attributes["w:val"] = styleName;
 
-            return new KeyValuePair<StyleCategory, TreeNode>(category, style);
+            return new KeyValuePair<StyleCategory, TreeNode>(category, styleNode);
         }
 
         private List<KeyValuePair<StyleCategory, TreeNode>> BuildUniqueTableStyles(TableStyle styleParams, IStyleBuilder builder) 

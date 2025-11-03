@@ -24,7 +24,7 @@ namespace XMLParser
             };
         }
 
-        private TreeNode? CheckChild(string tagName)
+        public bool CheckChild(string tagName, out TreeNode foundedChild)
         {
             if (Children.Count != 0)
             {
@@ -32,11 +32,13 @@ namespace XMLParser
                 {
                     if (child.TagName == tagName)
                     {
-                        return child;
+                        foundedChild = child;
+                        return true;
                     }
                 }
             }
-            return null;
+            foundedChild = null;
+            return false;
         }
 
         //Применяется когда искомые теги не могут идти подряд
@@ -49,9 +51,9 @@ namespace XMLParser
             while (queue.Count > 0)
             {
                 TreeNode currentNode = queue.Dequeue();
-                if (currentNode.CheckChild(tagName) != null)
+                if (currentNode.CheckChild(tagName, out TreeNode foundedChild))
                 {
-                    tags.Add(currentNode.CheckChild(tagName));
+                    tags.Add(foundedChild);
                 }
                 else
                 {
