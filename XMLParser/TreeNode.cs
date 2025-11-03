@@ -26,18 +26,38 @@ namespace XMLParser
 
         public bool CheckChild(string tagName, out TreeNode foundedChild)
         {
-            if (Children.Count != 0)
+            if (Children.Count == 0)
             {
-                foreach (TreeNode child in Children)
+                foundedChild = null;
+                return false;
+            }
+            
+            foreach (TreeNode child in Children)
+            {
+                if (child.TagName == tagName)
                 {
-                    if (child.TagName == tagName)
-                    {
-                        foundedChild = child;
-                        return true;
-                    }
+                    foundedChild = child;
+                    return true;
                 }
             }
+            
             foundedChild = null;
+            return false;
+        }
+
+        public bool ContainsChild(string tagName)
+        {
+            foreach(TreeNode child in Children)
+            {
+                if(child.TagName == tagName)
+                {
+                    return true;
+                }
+                else if(child.ContainsChild(tagName))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -87,6 +107,24 @@ namespace XMLParser
                 }
             }
             return tags;
+        }
+
+        public TreeNode SearchByAttributeValue(string tagName, string attributeKey, string attributeValue)
+        {
+            List<TreeNode> nodes = LongBreadthFirstSearch(tagName);
+
+            foreach (TreeNode node in nodes) 
+            {
+                if (node.Attributes.ContainsKey(attributeKey))
+                {
+                    if (node.Attributes[attributeKey] == attributeValue)
+                    {
+                        return node;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public void TerminateChildren(List<TreeNode> tags)

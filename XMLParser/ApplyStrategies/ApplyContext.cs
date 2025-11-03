@@ -9,11 +9,16 @@ namespace XMLParser.ApplyStrategies
 {
     public class ApplyContext
     {
-        private ApplyStrategy _currentStrategy {  get; set; }
+        private ApplyStrategy _currentStrategy { get; set; }
+        private TreeNode _numberingRoot { get; set; }
+
+        public ApplyContext(TreeNode numbringRoot)
+        {
+            _numberingRoot = numbringRoot;
+        }
 
         public void SetStrategy(StyleCategory category)
         {
-
             _currentStrategy = AppointStrategy(category);
         }
 
@@ -29,7 +34,7 @@ namespace XMLParser.ApplyStrategies
                 case StyleCategory.TextStyle:
                     return new ApplyTextStyleStrategy();
                 case StyleCategory.ParagraphStyle:
-                    return new ApplyParagraphStyleStrategy();
+                    return new ApplyParagraphStyleStrategy(_numberingRoot);
                 case StyleCategory.TableStyle:
                     return new ApplyTableStyleStrategy();
                 case StyleCategory.TableTextStyle:

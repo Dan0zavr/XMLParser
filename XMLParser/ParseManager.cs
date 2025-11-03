@@ -53,17 +53,17 @@ namespace XMLParser
                 CleanHandStyles(content, template, docSpecialTokens, savePath);
 
                 // применение стилей
-                ApplyContext applyContext = new ApplyContext();
+                ApplyContext applyContext = new ApplyContext(numberingRoot);
                 foreach (var strategy in allStyles)
                 {
                     applyContext.SetStrategy(strategy.Key);
                     applyContext.ApplyStyle(docRoot, strategy.Value);
-
                 }
 
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
 
                 TreeToXMLDocument(endRoot, docSpecialTokens, document, tempPath);
+                TreeToXMLDocument(numberingRoot, numberingSpecialTokens, numbering, tempPath);
 
                 return FilesInZip(tempPath, Path.GetFileName(readPath), savePath);
 
