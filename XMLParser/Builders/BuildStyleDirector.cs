@@ -27,21 +27,26 @@ namespace XMLParser.Builders
             Dictionary<StyleCategory, TreeNode> numberingStylesResult = new Dictionary<StyleCategory, TreeNode>();
             foreach (var (style, builder) in styles) 
             {
-                if(style is TextStyle || style is ParagraphStyle || style is PictureStyle)
+                if(style is TextStyle || style is ParagraphStyle)
                 {
                     KeyValuePair<StyleCategory, TreeNode> builtStyle = BuildUniqueSimpleStyle(style, builder);
                     stylesResult.Add(builtStyle.Key, builtStyle.Value);
                 }
-                else if(style is TableStyle)
+                else if(style is PictureStyle pictureStyle)
                 {
-                    foreach(var tableStyle in BuildUniqueTableStyles((TableStyle)style, builder))
+                    KeyValuePair<StyleCategory, TreeNode> builtStyle = BuildUniqueSimpleStyle(pictureStyle.ParagraphStyle, builder);
+                    stylesResult.Add(builtStyle.Key, builtStyle.Value);
+                }
+                else if (style is TableStyle)
+                {
+                    foreach (var tableStyle in BuildUniqueTableStyles((TableStyle)style, builder))
                     {
                         stylesResult.Add(tableStyle.Key, tableStyle.Value);
                     }
                 }
-                else if(style is NumberingStyle)
+                else if (style is NumberingStyle)
                 {
-                    foreach(var numberingStyle in BuildUniqueNumberingStyles((NumberingStyle)style, (NumberingStyleBuilder)builder))
+                    foreach (var numberingStyle in BuildUniqueNumberingStyles((NumberingStyle)style, (NumberingStyleBuilder)builder))
                     {
                         numberingStylesResult.Add(numberingStyle.Key, numberingStyle.Value);
                     }

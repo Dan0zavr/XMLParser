@@ -17,7 +17,6 @@ namespace XMLParser.Builders
             string tagName = "w:pPr";
             string styleType = "paragraph";
             string styleName = "заглушка"; // Сделать гарантию уникального имени вне этого метода (чтобы не передавать root)
-            //string styleName = EnsureUniqueStyleName(root, "w:style", "WordRegParagraphStyle");
 
             //Формирование тега для имени стиля
             TreeNode styleIdAndName = new TreeNode()

@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 
 namespace XMLParser.Styles
 {
-    public class PictureStyle : ParagraphStyle, IStyle
+    public class PictureStyle : IStyle
     {
         public string StyleType => "PictureStyle";
-        
-        public bool AutoGenerateLable { get; set; }
-        public string? LabelValue { get; set; }
-        public string? LabelNumberingType { get; set; }
-        public bool EmptyLineBefore { get; set; }
-        public bool EmptyLineAfter { get; set; }
+
+        public bool AutoGenerateLable { get; set; } = false;
+        public string? LabelValue { get; set; } = string.Empty;
+        public string? LabelNumberingType { get; set; } = string.Empty;
+        public bool EmptyLineBefore { get; set; } = true;
+        public bool EmptyLineAfter { get; set; } = true;
+
+        public ParagraphStyle ParagraphStyle { get; set; }
 
     }
 }
