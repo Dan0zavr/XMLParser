@@ -35,7 +35,7 @@ namespace XMLParser.Builders
                 else if(style is PictureStyle pictureStyle)
                 {
                     KeyValuePair<StyleCategory, TreeNode> builtStyle = BuildUniqueSimpleStyle(pictureStyle.ParagraphStyle, builder);
-                    stylesResult.Add(builtStyle.Key, builtStyle.Value);
+                    stylesResult.Add(StyleCategory.PictureStyle, builtStyle.Value);
                 }
                 else if (style is TableStyle)
                 {

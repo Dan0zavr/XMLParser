@@ -39,14 +39,16 @@ namespace XMLParser
                 var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
+                TreeNode contentBody = content.Children[0];
 
                 if (template.PictureStyle != null)
                 {
-                    Dictionary<int, TreeNode> paragraphsWithPictures = ExtractPicturesFromParagraphToDictionary(content);
+                    Dictionary<int, TreeNode> paragraphsWithPictures = ExtractPicturesFromParagraphToDictionary(contentBody);
 
                     if (paragraphsWithPictures != null)
                     {
-                        ReconstructParagraphs(content, SeparateDrawingsAndText(paragraphsWithPictures));
+                        ReconstructParagraphs(contentBody, SeparateDrawingsAndText(paragraphsWithPictures));
+                        CaptionAdder.AddCaption(contentBody, template.PictureStyle);
                     }
                 }
 
