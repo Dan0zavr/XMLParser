@@ -176,7 +176,12 @@ namespace XMLParser
 
                         drawingParagraph.Children.Add(runNode);
                         drawingParagraph.Children.Insert(0, paragraphStyleNode);
-                        sameNumberParagraphs.Add(drawingParagraph);
+
+                        List<TreeNode> allDrawingParagraphs = AddEmptyParagraphsAroundPicture(drawingParagraph);
+                        foreach (var paragraph_ in allDrawingParagraphs)
+                        {
+                            sameNumberParagraphs.Add(paragraph_);
+                        }
                     }
                     else
                     {
@@ -189,6 +194,13 @@ namespace XMLParser
             }
 
             return separatedParagraphs;
+        }
+
+        private static List<TreeNode> AddEmptyParagraphsAroundPicture(TreeNode picture)
+        {
+            TreeNode firstParagraphNode = CreateParagraphNode();
+            TreeNode lastParagraphNode = CreateParagraphNode();
+            return new List<TreeNode> { firstParagraphNode, picture, lastParagraphNode};
         }
 
         //добавляет абзац в список с одинаковым номером и очищает его потомков
