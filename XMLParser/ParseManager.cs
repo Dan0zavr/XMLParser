@@ -48,7 +48,8 @@ namespace XMLParser
                     if (paragraphsWithPictures != null)
                     {
                         ReconstructParagraphs(contentBody, SeparateDrawingsAndText(paragraphsWithPictures));
-                        CaptionAdder.AddCaption(contentBody, template.PictureStyle);
+                        Dictionary<int, List<TreeNode>> paragraphsWithCaptions =  CaptionAdder.AddCaption(contentBody, template.PictureStyle); //Оптимизировать так, чтобы реконструировать абзацы только 1 раз
+                        ReconstructParagraphs(contentBody, paragraphsWithCaptions);
                     }
                 }
 

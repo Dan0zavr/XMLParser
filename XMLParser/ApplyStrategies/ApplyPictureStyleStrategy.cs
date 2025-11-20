@@ -45,6 +45,10 @@ namespace XMLParser.ApplyStrategies
                         if (paragraphs[i].Children[j].Children[k].TagName == "w:drawing")
                         {
                             paragraphsWithPic.Add(paragraphs[i]);
+                            if(i + 1 < paragraphs.Count) // это для подписи к рисункам, позже может сделать выключаемой функцией
+                            {
+                                paragraphsWithPic.Add(paragraphs[i + 1]);
+                            }
                             break;
                         }
                     }
