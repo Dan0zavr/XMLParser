@@ -9,31 +9,48 @@ namespace XMLParser.ApplyStrategies
 {
     public class ApplyNumberingStyleStrategy : ApplyStrategy
     {
+        private TreeNode _numberingRoot;
+
+        public ApplyNumberingStyleStrategy(TreeNode numberingRoot)
+        {
+            _numberingRoot = numberingRoot;
+        }
         public override void Apply(TreeNode root, TreeNode style)
         {
-            string styleTagName = "";
-            string numberingStyleId = style.Attributes["w:numId"];
-            List<TreeNode> children = new List<TreeNode>();
+            FindNumPrTypes(root, _numberingRoot);
+        }
 
-            TreeNode numberingLevel = new TreeNode()
+        private Dictionary<int, string> FindNumPrTypes(TreeNode docRoot, TreeNode numRoot)
+        {
+            Dictionary<int, string> idAndType = new Dictionary<int, string>();
+            List<TreeNode> numPr = docRoot.QuikBreadthFirstSearch("w:numPr");
+            List<TreeNode> numNodes = numRoot.LongBreadthFirstSearch("w:num");
+            List<TreeNode> abstractNumNodes = numRoot.LongBreadthFirstSearch("w:abstractNum");
+
+            for (int i = 0; i < numPr.Count; i++)
             {
-                TagName = "w:ilvl",
-                Attributes = { { "w:val", "1" } }
-            };
+                int numId = Convert.ToInt32(numPr[i].Children[1].Attributes["w:val"]);
+                int numLvl = Convert.ToInt32(numPr[i].Children[0].Attributes["w:val"]);
+                string type = FindType(numNodes, abstractNumNodes, numId, numLvl);
+                idAndType.Add(i, type);
+            }
+            return idAndType;
+        }
 
-            TreeNode numberingStyle = new TreeNode()
-            {
-                TagName = "w:numId",
-                Attributes = { { "w:val", numberingStyleId } },
-            };
+        private string FindType(List<TreeNode> numNodes, List<TreeNode> abstractNodes, int id, int lvl)
+        {
+            TreeNode numNode = numNodes.Where(n => Convert.ToInt32(n.Attributes["w:numId"]) == id).FirstOrDefault();
 
-            children.Add(numberingLevel);
-            children.Add(numberingStyle);
+            if (numNode == null) throw new Exception("Id списка не найден");
 
-            List<TreeNode> foundedParents = new List<TreeNode>();
-            foundedParents = root.QuikBreadthFirstSearch("w:numPr");
+            int abstractId = Convert.ToInt32(numNode.Children[0].Attributes["w:val"]);
+            TreeNode abstractNode = abstractNodes.Where(n => Convert.ToInt32(n.Attributes["w:abstractNumId"]) == abstractId).FirstOrDefault();
 
-            root.AddChildren(foundedParents, children);
+            if (abstractNode == null) throw new Exception("Абстрактный Id списка не найден");
+            List<TreeNode> levels = abstractNode.LongBreadthFirstSearch("w:lvl");
+            TreeNode level = levels.Where(n => Convert.ToInt32(n.Attributes["w:ilvl"]) == lvl).First();
+            TreeNode numFormat = level.QuikBreadthFirstSearch("w:numFmt").First();
+            return numFormat.Attributes["w:val"];
         }
     }
 }

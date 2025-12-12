@@ -10,7 +10,7 @@ namespace XMLParser
         public List<string> Values { get; set; } = new();
         public List<TreeNode> Children { get; set; } = new();
 
-        public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign", "w:rPr", "w:numPr" };
+        public List<string> TagsForSave = new List<string>() { "w:b", "w:i", "w:u", "w:strike", "w:color", "w:vertAlign", "w:rPr", "w:numPr", "w:ilvl", "w:numId" };
 
         public TreeNode Clone()
         {

@@ -53,16 +53,7 @@ namespace XMLParser.Builders
             string abstractStyleId = EnsureUniqueNumberingId(root);
             string styleId = EnsureUniqueNumberingId(root);
 
-            TreeNode abstractNum = abstractStyle.Value.QuikBreadthFirstSearch("w:abstractNum").FirstOrDefault();
-
-            if (abstractNum != null)
-            {
-                abstractNum.Attributes["w:abstractNumId"] = abstractStyleId;
-            }
-            else
-            {
-                throw new Exception("Не получилось найти \"w:abstractNum\"");
-            }
+            abstractStyle.Value.Attributes["w:abstractNumId"] = abstractStyleId;
 
             style.Value.Attributes["w:numId"] = styleId;
 
