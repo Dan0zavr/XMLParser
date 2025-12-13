@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static XMLParser.TreeNode;
 
 namespace XMLParser.ApplyStrategies
@@ -10,6 +12,9 @@ namespace XMLParser.ApplyStrategies
     public class ApplyNumberingStyleStrategy : ApplyStrategy
     {
         private TreeNode _numberingRoot;
+        private List<TreeNode> _numPr;
+        private List<TreeNode> _numNodes;
+        private List<TreeNode> _abstractNodes;
 
         public ApplyNumberingStyleStrategy(TreeNode numberingRoot)
         {
@@ -17,27 +22,37 @@ namespace XMLParser.ApplyStrategies
         }
         public override void Apply(TreeNode root, TreeNode style)
         {
-            FindNumPrTypes(root, _numberingRoot);
+            _numNodes = root.LongBreadthFirstSearch("w:num");
+            _abstractNodes = root.LongBreadthFirstSearch("w:abstractNum");
+            _numPr = root.QuikBreadthFirstSearch("w:numPr");
+
+            string styleId = style.Attributes["w:numId"];
+            string styleType = FindTypeByNum(style, _abstractNodes);
+
+            Dictionary<int, string> allNumsAndTypes = FindNumPrTypes(root, _numberingRoot);
+            Dictionary<int, string> styleNumsAndTypes = allNumsAndTypes.Where(n => n.Value == styleType).ToDictionary();
+
+            foreach (var element in styleNumsAndTypes)
+            {
+                _numPr[element.Key].Children[1].Attributes["w:val"] = styleId;
+            }
         }
 
         private Dictionary<int, string> FindNumPrTypes(TreeNode docRoot, TreeNode numRoot)
         {
             Dictionary<int, string> idAndType = new Dictionary<int, string>();
-            List<TreeNode> numPr = docRoot.QuikBreadthFirstSearch("w:numPr");
-            List<TreeNode> numNodes = numRoot.LongBreadthFirstSearch("w:num");
-            List<TreeNode> abstractNumNodes = numRoot.LongBreadthFirstSearch("w:abstractNum");
 
-            for (int i = 0; i < numPr.Count; i++)
+            for (int i = 0; i < _numPr.Count; i++)
             {
-                int numId = Convert.ToInt32(numPr[i].Children[1].Attributes["w:val"]);
-                int numLvl = Convert.ToInt32(numPr[i].Children[0].Attributes["w:val"]);
-                string type = FindType(numNodes, abstractNumNodes, numId, numLvl);
+                int numId = Convert.ToInt32(_numPr[i].Children[1].Attributes["w:val"]);
+                int numLvl = Convert.ToInt32(_numPr[i].Children[0].Attributes["w:val"]);
+                string type = FindTypeByNum(_numNodes, _abstractNodes, numId, numLvl);
                 idAndType.Add(i, type);
             }
             return idAndType;
         }
 
-        private string FindType(List<TreeNode> numNodes, List<TreeNode> abstractNodes, int id, int lvl)
+        private string FindTypeByNum(List<TreeNode> numNodes, List<TreeNode> abstractNodes, int id, int lvl)
         {
             TreeNode numNode = numNodes.Where(n => Convert.ToInt32(n.Attributes["w:numId"]) == id).FirstOrDefault();
 
@@ -50,6 +65,15 @@ namespace XMLParser.ApplyStrategies
             List<TreeNode> levels = abstractNode.LongBreadthFirstSearch("w:lvl");
             TreeNode level = levels.Where(n => Convert.ToInt32(n.Attributes["w:ilvl"]) == lvl).First();
             TreeNode numFormat = level.QuikBreadthFirstSearch("w:numFmt").First();
+
+            return numFormat.Attributes["w:val"];
+        }
+
+        private string FindTypeByNum(TreeNode numNode, List<TreeNode> abstractNodes)
+        {
+            int abstractId = Convert.ToInt32(numNode.Children[0].Attributes["w:val"]);
+            TreeNode abstractNode = abstractNodes.Where(n => Convert.ToInt32(n.Attributes["w:abstractNumId"]) == abstractId).FirstOrDefault();
+            TreeNode numFormat = abstractNode.QuikBreadthFirstSearch("w:numFmt").First();
             return numFormat.Attributes["w:val"];
         }
     }
