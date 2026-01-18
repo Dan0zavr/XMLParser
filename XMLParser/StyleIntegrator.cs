@@ -15,5 +15,16 @@ namespace XMLParser
                 root.Children.Add(style);
             }
         }
+
+        public static void IntegrateNumberingStylesToTree(TreeNode root, List<TreeNode> containers)
+        {
+            foreach (var container in containers)
+            {
+                TreeNode absStyle = container.QuikBreadthFirstSearch("w:abstractNum").First();
+                TreeNode normStyle = container.QuikBreadthFirstSearch("w:num").First();
+                root.Children.Insert(0, absStyle);
+                root.Children.Add(normStyle);
+            }
+        }
     }
 }

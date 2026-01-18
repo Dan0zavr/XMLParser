@@ -15,6 +15,8 @@ namespace XMLParser.Styles
         TableTextStyle,
         TableParagraphStyle,
         NumberingStyle,
+        NumberingStyleNumbered,
+        NumberingStyleMarked,
         Useless
     }
 }

@@ -41,7 +41,9 @@ namespace XMLParser.ApplyStrategies
                     return new ApplyTableTextStyleStrategy();
                 case StyleCategory.TableParagraphStyle:
                     return new ApplyTableParagraphStrategy();
-                case StyleCategory.NumberingStyle:
+                case StyleCategory.NumberingStyleMarked:
+                    return new ApplyNumberingStyleStrategy(_numberingRoot);
+                case StyleCategory.NumberingStyleNumbered:
                     return new ApplyNumberingStyleStrategy(_numberingRoot);
                 case StyleCategory.PictureStyle:
                     return new ApplyPictureStyleStrategy();

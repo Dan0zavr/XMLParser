@@ -22,12 +22,14 @@ namespace XMLParser.ApplyStrategies
         }
         public override void Apply(TreeNode root, TreeNode style)
         {
-            _numNodes = root.LongBreadthFirstSearch("w:num");
-            _abstractNodes = root.LongBreadthFirstSearch("w:abstractNum");
+            TreeNode normStyle = style.QuikBreadthFirstSearch("w:num").First();
+
+            _numNodes = _numberingRoot.LongBreadthFirstSearch("w:num");
+            _abstractNodes = _numberingRoot.LongBreadthFirstSearch("w:abstractNum");
             _numPr = root.QuikBreadthFirstSearch("w:numPr");
 
-            string styleId = style.Attributes["w:numId"];
-            string styleType = FindTypeByNum(style, _abstractNodes);
+            string styleId = normStyle.Attributes["w:numId"];
+            string styleType = FindTypeByNum(normStyle, _abstractNodes);
 
             Dictionary<int, string> allNumsAndTypes = FindNumPrTypes(root, _numberingRoot);
             Dictionary<int, string> styleNumsAndTypes = allNumsAndTypes.Where(n => n.Value == styleType).ToDictionary();

@@ -8,9 +8,12 @@ using static XMLParser.TreeNode;
 
 namespace XMLParser.Builders
 {
-    public class NumberingStyleBuilder : StyleBuilder<NumberingStyle>
+    public class NumberingStyleBuilder : StyleBuilder<NumberingElementStyle>
     {
-        public override TreeNode BuildStyle(NumberingStyle style)
+        private List<int> usedIds = new List<int>();
+        private List<int> usedAbstractIds = new List<int>();
+
+        public override TreeNode BuildStyle(NumberingElementStyle style)
         {   
             // Создаем узел `w:num`, который ссылается на `w:abstractNum`
             TreeNode styleNode = new TreeNode
@@ -29,7 +32,7 @@ namespace XMLParser.Builders
             return styleNode;
         }
 
-        public TreeNode BuildAbstrtactStyle(NumberingStyle style)
+        public TreeNode BuildAbstrtactStyle(NumberingElementStyle style)
         {
             List<TreeNode> styleChildren = CreateNastedNodes(style);
 
@@ -48,16 +51,16 @@ namespace XMLParser.Builders
             return styleNode;
         }
 
-        public (KeyValuePair<StyleCategory, TreeNode>, KeyValuePair<StyleCategory, TreeNode>) SyncId(KeyValuePair<StyleCategory, TreeNode> style, KeyValuePair<StyleCategory, TreeNode> abstractStyle, TreeNode root)
+        public (TreeNode, TreeNode) SyncId(TreeNode style, TreeNode abstractStyle, TreeNode root)
         {
-            string abstractStyleId = EnsureUniqueNumberingId(root);
+            string abstractStyleId = EnsureUniqueAbstractNumberingId(root);
             string styleId = EnsureUniqueNumberingId(root);
 
-            abstractStyle.Value.Attributes["w:abstractNumId"] = abstractStyleId;
+            abstractStyle.Attributes["w:abstractNumId"] = abstractStyleId;
 
-            style.Value.Attributes["w:numId"] = styleId;
+            style.Attributes["w:numId"] = styleId;
 
-            TreeNode abstractNumIdInStyle = style.Value.QuikBreadthFirstSearch("w:abstractNumId").FirstOrDefault();
+            TreeNode abstractNumIdInStyle = style.QuikBreadthFirstSearch("w:abstractNumId").FirstOrDefault();
 
             if (abstractNumIdInStyle != null) 
             {
@@ -71,11 +74,11 @@ namespace XMLParser.Builders
             return (style, abstractStyle);
         }
 
-        private protected override List<TreeNode> CreateNastedNodes(NumberingStyle styleToTree)
+        private protected override List<TreeNode> CreateNastedNodes(NumberingElementStyle styleToTree)
         {
             List<TreeNode> styleNodes = new List<TreeNode>();
 
-            for (int level = 1; level <= styleToTree.Levels; level++)
+            for (int level = NumberingElementStyle.DEFAULT_LEVELS; level <= styleToTree.Levels; level++)
             {
                 TreeNode lvlNode = new TreeNode
                 {
@@ -105,21 +108,54 @@ namespace XMLParser.Builders
         }
         private string EnsureUniqueNumberingId(TreeNode root)
         {
-            int counter = 0;
-            string id = counter.ToString();
+            int counter = 1;
+            int id = counter;
+
+            List<TreeNode> styles = root.LongBreadthFirstSearch("w:num");
+
+            foreach (var style in styles)
+            {
+                if (style.Attributes.TryGetValue("w:numId", out string styleId) && styleId == id.ToString())
+                {
+                    counter++;
+                    id = counter;
+                }
+
+                if (usedIds.Contains(id))
+                {
+                    counter++;
+                    id = counter;
+                }
+            }
+
+            usedIds.Add(id);
+            return id.ToString();
+        }
+
+        private string EnsureUniqueAbstractNumberingId(TreeNode root)
+        {
+            int counter = 1;
+            int id = counter;
 
             List<TreeNode> styles = root.LongBreadthFirstSearch("w:abstractNum");
 
             foreach (var style in styles)
             {
-                if (style.Attributes.TryGetValue("w:abstractNumId", out string styleId) && styleId == id)
+                if (style.Attributes.TryGetValue("w:abstractNumId", out string styleId) && styleId == id.ToString())
                 {
                     counter++;
-                    id = counter.ToString();
+                    id = counter;
+                }
+
+                if (usedAbstractIds.Contains(id))
+                {
+                    counter++;
+                    id = counter;
                 }
             }
 
-            return id;
+            usedAbstractIds.Add(id);
+            return id.ToString();
         }
     }
 }

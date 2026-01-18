@@ -46,8 +46,11 @@ namespace XMLParser.Builders
                 }
                 else if (style is NumberingStyle)
                 {
-                    foreach (var numberingStyle in BuildUniqueNumberingStyles((NumberingStyle)style, (NumberingStyleBuilder)builder))
+                    NumberingStyle numStyle = (NumberingStyle)style;
+                    List<NumberingElementStyle> elements = numStyle.GetElements();
+                    foreach (var element in elements)
                     {
+                        var numberingStyle = BuildUniqueNumberingStyles(element, (NumberingStyleBuilder)builder); 
                         numberingStylesResult.Add(numberingStyle.Key, numberingStyle.Value);
                     }
                 }
@@ -100,18 +103,42 @@ namespace XMLParser.Builders
             return styles;
         }
 
-        private List<KeyValuePair<StyleCategory, TreeNode>> BuildUniqueNumberingStyles(NumberingStyle styleParams, NumberingStyleBuilder builder)
+        private KeyValuePair<StyleCategory, TreeNode> BuildUniqueNumberingStyles(NumberingElementStyle styleParams, NumberingStyleBuilder builder)
         {
             TreeNode normalStyle = builder.BuildStyle(styleParams);
             TreeNode absStyle = builder.BuildAbstrtactStyle(styleParams);
 
-            KeyValuePair<StyleCategory, TreeNode> style = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.NumberingStyle, normalStyle);
-            KeyValuePair<StyleCategory, TreeNode> abstractStyle = new KeyValuePair<StyleCategory, TreeNode>(StyleCategory.Useless, absStyle);
+            StyleCategory numFmt = DetermineNumberingFormat(absStyle);
 
-            (style, abstractStyle) = builder.SyncId(style, abstractStyle, _numberingRoot);
-            List<KeyValuePair<StyleCategory, TreeNode>> styles = new List<KeyValuePair<StyleCategory, TreeNode>>() {style, abstractStyle};
+            (normalStyle, absStyle) = builder.SyncId(normalStyle, absStyle, _numberingRoot);
+
+            TreeNode style = new TreeNode
+            {
+                TagName = "container",
+                Children =
+                {
+                    normalStyle,
+                    absStyle,
+                }
+            };
+
+            KeyValuePair<StyleCategory, TreeNode> styles = new KeyValuePair<StyleCategory, TreeNode>(numFmt, style);
 
             return styles;
+        }
+
+        private StyleCategory DetermineNumberingFormat(TreeNode abstractStyle)
+        { 
+            string numberingFormat = abstractStyle.QuikBreadthFirstSearch("w:numFmt").First().Attributes["w:val"];
+            switch (numberingFormat)
+            {
+                case "bullet":
+                    return StyleCategory.NumberingStyleMarked;
+                case "decimal":
+                    return StyleCategory.NumberingStyleNumbered;
+                default:
+                    throw new NotImplementedException("Такой формат списков не найден");
+            }
         }
     }
 }

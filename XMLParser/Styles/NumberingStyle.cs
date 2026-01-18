@@ -2,20 +2,17 @@
 {
     public class NumberingStyle : IStyle
     {
+        public NumberingElementStyle? MarkedNumbering {  get; set; }
+        public NumberingElementStyle? NumberedNumbering { get; set; }
+
         public string StyleType => "NumberingStyle";
 
-        public enum NumberingFormat
+        public List<NumberingElementStyle> GetElements()
         {
-            Decimal,
-            RomanUpper,
-            RomanLower,
-            Bullet,
-            UpperLetter,
-            LowerLetter
+            List<NumberingElementStyle> elements = new List<NumberingElementStyle>();
+            if (MarkedNumbering != null) elements.Add(MarkedNumbering);
+            if (NumberedNumbering != null) elements.Add(NumberedNumbering);
+            return elements;
         }
-
-        public int Levels { get; set; } = 1;
-        public string NumberingType { get; set; }
-        public string Marker { get; set; }
     }
 }

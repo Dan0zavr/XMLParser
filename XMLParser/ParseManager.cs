@@ -31,11 +31,11 @@ namespace XMLParser
                 Dictionary<StyleCategory, TreeNode> allStyles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);
 
                 XMLParser.StyleIntegrator.IntegrateStylesToTree(styleRoot, inStyles.Values.ToList());
-                XMLParser.StyleIntegrator.IntegrateStylesToTree(numberingRoot, inNumbering.Values.ToList());
+                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(numberingRoot, inNumbering.Values.ToList());
 
                 TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
 
-                //Применение стилей
+                //Начало применения стилей
                 var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
