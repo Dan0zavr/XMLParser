@@ -28,7 +28,7 @@ namespace XMLParser.ApplyStrategies
 
             for (int i = 0; i < foundedParents.Count; i++)
             {
-                foundedParents[i].Children.Add(styleToApply);
+                foundedParents[i].Children.Insert(0, styleToApply);
             }
         }
     }

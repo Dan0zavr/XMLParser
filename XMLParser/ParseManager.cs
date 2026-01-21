@@ -22,6 +22,7 @@ namespace XMLParser
             try
             {
                 UnZipDocx(readPath, tempPath);
+                var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
                 var (styleRoot, styleSpecialTokens) = ReadXMLDocument(styles, tempPath);
                 var (numberingRoot, numberingSpecialTokens) = ReadXMLDocument(numbering, tempPath);
 
@@ -31,13 +32,13 @@ namespace XMLParser
                 Dictionary<StyleCategory, TreeNode> allStyles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);
 
                 XMLParser.StyleIntegrator.IntegrateStylesToTree(styleRoot, inStyles.Values.ToList());
-                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(numberingRoot, inNumbering.Values.ToList());
+                TreeNode paragraphStyle = inStyles[StyleCategory.ParagraphStyle];
+                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(docRoot, numberingRoot, inNumbering.Values.ToList(), paragraphStyle);
 
                 TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
 
                 //Начало применения стилей
-                var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
-
+                
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
                 TreeNode contentBody = content.Children[0];
 

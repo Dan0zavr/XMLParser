@@ -144,15 +144,15 @@ namespace XMLParser
             }
         }
 
-        public void TerminateSpecialCildren(TreeNode node, string deleteTagName)
+        public void TerminateSpecialCildren(string deleteTagName)
         {
-            for(int i = node.Children.Count - 1;i >= 0; i--)
+            for(int i = Children.Count - 1; i >= 0; i--)
             {
-                TreeNode child = node.Children[i];
+                TreeNode child = Children[i];
 
                 if (child.TagName == deleteTagName)
                 {
-                    node.Children.RemoveAt(i);
+                    Children.RemoveAt(i);
                 }
             }
         }

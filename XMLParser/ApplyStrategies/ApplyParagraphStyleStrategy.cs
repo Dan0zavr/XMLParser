@@ -23,7 +23,7 @@ namespace XMLParser.ApplyStrategies
             TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
 
             ApplyStylesToNodes(root, tagName, applyStyle);
-            ApplyParagraphStyleToNumbering(root, applyStyle);
+            //ApplyParagraphStyleToNumbering(root, applyStyle);
         }
 
         private void ApplyParagraphStyleToNumbering(TreeNode root, TreeNode style)

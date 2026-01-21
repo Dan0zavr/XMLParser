@@ -105,24 +105,11 @@ namespace XMLParser.Builders
 
         private KeyValuePair<StyleCategory, TreeNode> BuildUniqueNumberingStyles(NumberingElementStyle styleParams, NumberingStyleBuilder builder)
         {
-            TreeNode normalStyle = builder.BuildStyle(styleParams);
-            TreeNode absStyle = builder.BuildAbstrtactStyle(styleParams);
+            TreeNode absStyle = builder.BuildStyle(styleParams);
 
             StyleCategory numFmt = DetermineNumberingFormat(absStyle);
 
-            (normalStyle, absStyle) = builder.SyncId(normalStyle, absStyle, _numberingRoot);
-
-            TreeNode style = new TreeNode
-            {
-                TagName = "container",
-                Children =
-                {
-                    normalStyle,
-                    absStyle,
-                }
-            };
-
-            KeyValuePair<StyleCategory, TreeNode> styles = new KeyValuePair<StyleCategory, TreeNode>(numFmt, style);
+            KeyValuePair<StyleCategory, TreeNode> styles = new KeyValuePair<StyleCategory, TreeNode>(numFmt, absStyle);
 
             return styles;
         }

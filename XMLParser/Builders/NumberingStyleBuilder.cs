@@ -14,25 +14,6 @@ namespace XMLParser.Builders
         private List<int> usedAbstractIds = new List<int>();
 
         public override TreeNode BuildStyle(NumberingElementStyle style)
-        {   
-            // Создаем узел `w:num`, который ссылается на `w:abstractNum`
-            TreeNode styleNode = new TreeNode
-            {
-                TagName = "w:num",
-                Attributes = { { "w:numId", "-1" } }, // id генерируется позже
-                Children = {
-                    new TreeNode {
-                        TagName = "w:abstractNumId",
-                        Attributes = { { "w:val", "-1" } } // Синхронизируется позже
-                    }
-                },
-                CloseTag = true
-            };
-
-            return styleNode;
-        }
-
-        public TreeNode BuildAbstrtactStyle(NumberingElementStyle style)
         {
             List<TreeNode> styleChildren = CreateNastedNodes(style);
 
@@ -87,6 +68,13 @@ namespace XMLParser.Builders
                     CloseTag = true
                 };
 
+                //С чего начинается нумерация
+                lvlNode.Children.Add(new TreeNode
+                {
+                    TagName = "w:start",
+                    Attributes = { { "w:val", "1"} }
+                });
+
                 // Формат нумерации
                 lvlNode.Children.Add(new TreeNode
                 {
@@ -99,6 +87,12 @@ namespace XMLParser.Builders
                 {
                     TagName = "w:lvlText",
                     Attributes = { { "w:val", styleToTree.Marker.Replace("%1", $"%{level + 1}") } }
+                });
+
+                lvlNode.Children.Add(new TreeNode
+                {
+                    TagName = "w:pPr",
+                    CloseTag = true
                 });
 
                 styleNodes.Add(lvlNode);
