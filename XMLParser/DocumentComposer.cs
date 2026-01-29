@@ -102,7 +102,7 @@ namespace XMLParser
                 CloseTag = true,
             };
             document.Children.AddRange(titlePage.Children);
-            document.Children.AddRange(content.Children);
+            document.Children.AddRange(content.Children[0].Children);
             mainTag.Children.Add(document);
 
             return mainTag;

@@ -1,23 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using XMLParser.Styles;
 
-namespace XMLParser.ApplyStrategies
+namespace XMLParser
 {
-    public class ApplyTextStyleStrategy : ApplyStrategy
+    public static class Ignorer
     {
-        public override void Apply(TreeNode root,TreeNode style) //сделать игнорирование формул
+        public static void IgnoreFormulas(TreeNode root, Action method)
         {
-            string styleTagName = "w:rStyle";
-            string tagName = "w:rPr";
-            string styleName = style.Attributes["w:styleId"];
-
-            TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
-            //игнорирование формул
             List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
             List<TreeNode> formulaParagraphs = new List<TreeNode>();
             foreach (TreeNode node in paragraphs)
@@ -33,7 +25,7 @@ namespace XMLParser.ApplyStrategies
                 formulaClones.Add(formula.Clone());
             }
 
-            ApplyStylesToNodes(root, tagName, applyStyle);
+            method();
 
             for (int i = 0; i < formulaParagraphs.Count; i++)
             {

@@ -54,6 +54,13 @@ namespace XMLParser.Builders
                         numberingStylesResult.Add(numberingStyle.Key, numberingStyle.Value);
                     }
                 }
+                else if (style is FormulaStyle)
+                {
+                    FormulaStyle formulaStyle = (FormulaStyle)style;
+                    FormulaParagraphBuilder formulaBuilder = (FormulaParagraphBuilder)builder;
+                    TreeNode formulaContainer = formulaBuilder.BuildStyle(formulaStyle);
+                    stylesResult.Add(StyleCategory.FormulaStyle, formulaContainer);
+                }
                 else
                 {
                     throw new Exception($"Необработанный стиль {style.GetType()}");

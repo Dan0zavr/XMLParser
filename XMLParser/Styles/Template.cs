@@ -16,6 +16,7 @@ namespace XMLParser.Styles
         public NumberingStyle? NumberingStyle { get; set; }
         public TableStyle? TableStyle { get; set; }
         public PictureStyle? PictureStyle { get; set; }
+        public FormulaStyle? FormulaStyle { get; set; }
 
         public Dictionary<IStyle, IStyleBuilder> GetStyles()
         {
@@ -26,7 +27,7 @@ namespace XMLParser.Styles
             if (NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
             if (TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
             if (PictureStyle != null) styles.Add(PictureStyle, new PictureStyleBuilder());
-
+            if (FormulaStyle != null) styles.Add(FormulaStyle, new FormulaParagraphBuilder());
             return styles;
         }
     }

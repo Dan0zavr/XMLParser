@@ -45,6 +45,23 @@ namespace XMLParser
             return false;
         }
 
+        public bool CheckChild(string tagName)
+        {
+            if (Children.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (TreeNode child in Children)
+            {
+                if (child.TagName == tagName)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool ContainsChild(string tagName)
         {
             foreach(TreeNode child in Children)
