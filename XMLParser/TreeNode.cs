@@ -199,7 +199,9 @@ namespace XMLParser
                             var parts = item.Split('=');
                             if (parts.Length == 2)
                             {
-                                treeNode.Attributes[parts[0]] = parts[1].Trim('"');
+                                var key = parts[0].Trim('"').Replace(" ", "");
+                                var value = parts[1].Trim('"').Replace(" ", "");
+                                treeNode.Attributes[key] = value;
                             }
                         }
                     }
@@ -227,9 +229,12 @@ namespace XMLParser
                             foreach (var item in attributes)
                             {
                                 var parts = item.Split('=');
+                                
                                 if (parts.Length == 2)
                                 {
-                                    treeNode.Attributes[parts[0]] = parts[1].Trim('"');
+                                    var key = parts[0].Trim('"').Replace(" ", "");
+                                    var value = parts[1].Trim('"').Replace(" ", "");
+                                    treeNode.Attributes[key] = value;
                                 }
                             }
                         }

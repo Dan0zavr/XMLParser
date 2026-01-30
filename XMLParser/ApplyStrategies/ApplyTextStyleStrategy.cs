@@ -17,28 +17,8 @@ namespace XMLParser.ApplyStrategies
             string styleName = style.Attributes["w:styleId"];
 
             TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
-            //игнорирование формул
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
-            List<TreeNode> formulaParagraphs = new List<TreeNode>();
-            foreach (TreeNode node in paragraphs)
-            {
-                if (node.CheckChild("m:oMathPara"))
-                {
-                    formulaParagraphs.Add(node);
-                }
-            }
-            List<TreeNode> formulaClones = new List<TreeNode>();
-            foreach (TreeNode formula in formulaParagraphs)
-            {
-                formulaClones.Add(formula.Clone());
-            }
 
             ApplyStylesToNodes(root, tagName, applyStyle);
-
-            for (int i = 0; i < formulaParagraphs.Count; i++)
-            {
-                formulaParagraphs[i].Children = formulaClones[i].Children;
-            }
         }
     }
 }

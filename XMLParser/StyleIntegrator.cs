@@ -12,7 +12,7 @@ namespace XMLParser
         {
             foreach (TreeNode style in styles)
             {
-                root.Children.Add(style);
+                if (style.TagName != "formulaContainer")root.Children.Add(style);
             }
         }
 

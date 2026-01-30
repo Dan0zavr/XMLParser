@@ -25,7 +25,7 @@ namespace XMLParser.Builders
 
             TreeNode jc = new TreeNode
             {
-                TagName = "w;jc",
+                TagName = "w:jc",
                 Attributes = { { "w:val", "left" } }
             };
 
@@ -37,14 +37,15 @@ namespace XMLParser.Builders
                     new TreeNode // tab'ы для формулы
                     {
                         TagName = "w:tab",
-                        Attributes = {{"w:val", "value"}, {"w:pos", "value"} }
+                        Attributes = {{"w:val", "center"}, {"w:pos", "value"} }
                     },
                     new TreeNode // tab'ы для номера
                     {
                         TagName = "w:tab",
-                        Attributes = {{"w:val", "value"}, {"w:pos", "value"} }
+                        Attributes = {{"w:val", "right"}, {"w:pos", "value"} }
                     }
-                }
+                },
+                CloseTag = true
             };
 
             TreeNode tab = new TreeNode
