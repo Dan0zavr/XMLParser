@@ -13,6 +13,7 @@ namespace XMLParser.ApplyStrategies
     {
         public override void Apply(TreeNode root, TreeNode style)
         {
+            Dictionary<string, string> attributes = style.Attributes;
             List<TreeNode> formulaParagraphs = FindFormulaParagraphs(root);
             TreeNode styleParagraph = style.Children[0];
             int counter = 0;
@@ -21,6 +22,7 @@ namespace XMLParser.ApplyStrategies
                 counter++;
                 TreeNode styleClone = styleParagraph.Clone();
                 TreeNode formulaBuffer = formulaParagraphs[i].QuikBreadthFirstSearch("m:oMathPara").First().Clone();
+                AddParaPr(formulaBuffer);
                 for (int j = 0; j < styleClone.Children.Count; j++)
                 {
                     if (styleClone.Children[j].TagName == "formula")
@@ -40,29 +42,22 @@ namespace XMLParser.ApplyStrategies
                     string numberValue = numberingFormat.Replace('$', Convert.ToChar(counter.ToString()));
                     number.TagName = "w:t";
                     number.Values[0] = numberValue;
-                    if (Enum.TryParse<AlignmentPreset>(style.Attributes["alignment"], out var alignment))
-                    {
-                        if (alignment == AlignmentPreset.RightLeft || alignment == AlignmentPreset.CenterLeft)
-                        {
-                            styleClone = SwitchFormulaAndNumbering(styleClone);
-                        }
-                    }
-
-                    if (tabs.Children.Count == 1)
-                    {
-                        List<TreeNode> r = styleClone.LongBreadthFirstSearch("w:r");
-                        for (int j = 0; j < r.Count; j++)
-                        {
-                            if (r[j].CheckChild("w:tab"))
-                            {
-                                styleClone.Children.Remove(r[j]);
-                                break;
-                            }
-                        }
-                    }
-                    
                 }
-                
+
+                if (Enum.TryParse<AlignmentPreset>(style.Attributes["alignment"], out var alignment))
+                {
+                    if (alignment == AlignmentPreset.RightLeft || alignment == AlignmentPreset.CenterLeft)
+                    {
+                        styleClone = SwitchFormulaAndNumbering(styleClone, Convert.ToBoolean(attributes["numbering"]), attributes["numberingFormat"]);
+                    }
+                }
+
+                //убираются лишние текстовые запуски с табом
+                if (tabs.Children.Count == 1)
+                {
+                    DeleteExcessTab(styleClone, alignment, Convert.ToBoolean(attributes["numbering"]));
+                }
+
                 formulaParagraphs[i].Children = styleClone.Children;
             }
 
@@ -72,7 +67,24 @@ namespace XMLParser.ApplyStrategies
             }
         }
 
-        private TreeNode SwitchFormulaAndNumbering(TreeNode style)
+        private void DeleteExcessTab(TreeNode style, AlignmentPreset alignment, bool isNumbered)
+        {
+            List<TreeNode> r = style.LongBreadthFirstSearch("w:r");
+            if ((alignment is AlignmentPreset.CenterLeft || alignment is AlignmentPreset.RightLeft) && !isNumbered) { } // таким образом достигается правильное позиционирование формулы
+            else
+            {
+                for (int j = 0; j < r.Count; j++)
+                {
+                    if (r[j].CheckChild("w:tab"))
+                    {
+                        style.Children.Remove(r[j]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private TreeNode SwitchFormulaAndNumbering(TreeNode style, bool isNumbered, string numerationFormat)
         {
             TreeNode result = new TreeNode();
             int formulaIndex = 0;
@@ -80,33 +92,40 @@ namespace XMLParser.ApplyStrategies
             int numberingIndex = 0;
             TreeNode numberingBuffer = new TreeNode();
 
-            for (int i = 0; i < style.Children.Count; i++)
+            if (isNumbered)
             {
-                if (style.Children[i].TagName == "m:oMathPara")
+                for (int i = 0; i < style.Children.Count; i++)
                 {
-                    formulaIndex = i;
-                    formulaBuffer = style.Children[i].Clone();
-                }
-                if (style.Children[i].TagName == "w:r")
-                {
-                    if (style.Children[i].CheckChild("w:t", out TreeNode text))
+                    if (style.Children[i].TagName == "m:oMathPara")
                     {
-                        string pattern = @"\(\d\)";
-                        if(Regex.IsMatch(text.Values.FirstOrDefault(), pattern))
+                        formulaIndex = i;
+                        formulaBuffer = style.Children[i].Clone();
+                    }
+                    if (style.Children[i].TagName == "w:r")
+                    {
+                        if (style.Children[i].CheckChild("w:t", out TreeNode text))
                         {
-                            numberingIndex = i;
-                            numberingBuffer = style.Children[i].Clone();
+                            string pattern = Regex.Escape(numerationFormat).Replace(@"\$", @"\d");
+                            if (Regex.IsMatch(text.Values.FirstOrDefault(), pattern))
+                            {
+                                numberingIndex = i;
+                                numberingBuffer = style.Children[i].Clone();
+                            }
                         }
                     }
                 }
-            }
 
-            result = style.Clone();
-            result.Children.Remove(result.Children[formulaIndex]);
-            result.Children.Remove(result.Children[numberingIndex - 1]);
-            result.Children.Insert(formulaIndex, numberingBuffer);
-            result.Children.Insert(numberingIndex, formulaBuffer);
-            return result;
+                result = style.Clone();
+                result.Children.Remove(result.Children[formulaIndex]);
+                result.Children.Remove(result.Children[numberingIndex - 1]);
+                result.Children.Insert(formulaIndex, numberingBuffer);
+                result.Children.Insert(numberingIndex, formulaBuffer);
+                return result;
+            }
+            else
+            {
+                return style.Clone();
+            }
         }
 
         private void CreateLineAround(TreeNode root)
@@ -129,6 +148,23 @@ namespace XMLParser.ApplyStrategies
                 }
             }
             body.Children = newChildren;
+        }
+
+        private void AddParaPr(TreeNode formula)
+        {
+            TreeNode jc = new TreeNode
+            {
+                TagName = "m:jc",
+                Attributes = { { "m:val", "left" } }
+            };
+
+            TreeNode paraPr = new TreeNode
+            {
+                TagName = "m:oMathParaPr",
+                Children = { jc.Clone() },
+                CloseTag = true
+            };
+            formula.Children.Insert(0, paraPr);
         }
 
         private List<TreeNode> FindFormulaParagraphs(TreeNode root)

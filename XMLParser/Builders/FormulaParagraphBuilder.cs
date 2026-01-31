@@ -22,13 +22,12 @@ namespace XMLParser.Builders
 
         private Dictionary<string, string> CreateContainerAttributes(FormulaStyle style)
         {
-            const string LINE_AROUND = "lineAround";
-            const string ALIGNMENT = "alignment";
-
             Dictionary<string, string> attributes = new Dictionary<string, string>();
 
-            attributes.Add(LINE_AROUND, $"{style.EmptyLineAround.ToString().ToLower()}");
-            attributes.Add(ALIGNMENT, style.AlignmentPreset.ToString());
+            attributes.Add("lineAround", $"{style.EmptyLineAround.ToString().ToLower()}");
+            attributes.Add("alignment", style.AlignmentPreset.ToString());
+            attributes.Add("numbering", $"{style.Numeration.ToString().ToLower()}");
+            attributes.Add("numberingFormat", style.NumerationFormat);
 
             return attributes;
         }
@@ -41,6 +40,13 @@ namespace XMLParser.Builders
             {
                 TagName = "w:jc",
                 Attributes = { { "w:val", "left" } }
+            };
+
+            TreeNode paraPr = new TreeNode
+            {
+                TagName = "m:oMathParaPr",
+                Children = { jc.Clone() },
+                CloseTag = true
             };
 
             TreeNode tabs = new TreeNode
