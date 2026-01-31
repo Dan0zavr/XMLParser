@@ -4,6 +4,8 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.Styles;
+using System.Text.RegularExpressions;
 
 namespace XMLParser.ApplyStrategies
 {
@@ -29,7 +31,7 @@ namespace XMLParser.ApplyStrategies
 
                 TreeNode sectPr = FindFirstSectPr(root, formulaParagraphs, i);
 
-                TreeNode tabs = CreateTabs(sectPr, styleClone);
+                TreeNode tabs = CreateTabs(style, sectPr, styleClone);
 
                 TreeNode number = styleClone.QuikBreadthFirstSearch("number").FirstOrDefault();
                 if (number != null)
@@ -38,9 +40,29 @@ namespace XMLParser.ApplyStrategies
                     string numberValue = numberingFormat.Replace('$', Convert.ToChar(counter.ToString()));
                     number.TagName = "w:t";
                     number.Values[0] = numberValue;
-                }
+                    if (Enum.TryParse<AlignmentPreset>(style.Attributes["alignment"], out var alignment))
+                    {
+                        if (alignment == AlignmentPreset.RightLeft || alignment == AlignmentPreset.CenterLeft)
+                        {
+                            styleClone = SwitchFormulaAndNumbering(styleClone);
+                        }
+                    }
 
-                formulaParagraphs[i].Children.Clear();
+                    if (tabs.Children.Count == 1)
+                    {
+                        List<TreeNode> r = styleClone.LongBreadthFirstSearch("w:r");
+                        for (int j = 0; j < r.Count; j++)
+                        {
+                            if (r[j].CheckChild("w:tab"))
+                            {
+                                styleClone.Children.Remove(r[j]);
+                                break;
+                            }
+                        }
+                    }
+                    
+                }
+                
                 formulaParagraphs[i].Children = styleClone.Children;
             }
 
@@ -48,6 +70,43 @@ namespace XMLParser.ApplyStrategies
             {
                 CreateLineAround(root);
             }
+        }
+
+        private TreeNode SwitchFormulaAndNumbering(TreeNode style)
+        {
+            TreeNode result = new TreeNode();
+            int formulaIndex = 0;
+            TreeNode formulaBuffer = new TreeNode();
+            int numberingIndex = 0;
+            TreeNode numberingBuffer = new TreeNode();
+
+            for (int i = 0; i < style.Children.Count; i++)
+            {
+                if (style.Children[i].TagName == "m:oMathPara")
+                {
+                    formulaIndex = i;
+                    formulaBuffer = style.Children[i].Clone();
+                }
+                if (style.Children[i].TagName == "w:r")
+                {
+                    if (style.Children[i].CheckChild("w:t", out TreeNode text))
+                    {
+                        string pattern = @"\(\d\)";
+                        if(Regex.IsMatch(text.Values.FirstOrDefault(), pattern))
+                        {
+                            numberingIndex = i;
+                            numberingBuffer = style.Children[i].Clone();
+                        }
+                    }
+                }
+            }
+
+            result = style.Clone();
+            result.Children.Remove(result.Children[formulaIndex]);
+            result.Children.Remove(result.Children[numberingIndex - 1]);
+            result.Children.Insert(formulaIndex, numberingBuffer);
+            result.Children.Insert(numberingIndex, formulaBuffer);
+            return result;
         }
 
         private void CreateLineAround(TreeNode root)
@@ -101,28 +160,68 @@ namespace XMLParser.ApplyStrategies
             return sectPrs[sectPrs.Count - 1];
         }
 
-        private TreeNode CreateTabs(TreeNode sectPr, TreeNode paragraph)
+        private TreeNode CreateTabs(TreeNode style, TreeNode sectPr, TreeNode paragraph)
         {
             TreeNode tabs = paragraph.QuikBreadthFirstSearch("w:tabs").First();
             string pageWidth = sectPr.QuikBreadthFirstSearch("w:pgSz").First().Attributes["w:w"];
             string leftMargin = sectPr.QuikBreadthFirstSearch("w:pgMar").First().Attributes["w:left"];
             string rightMargin = sectPr.QuikBreadthFirstSearch("w:pgMar").First().Attributes["w:right"];
 
-            (string centerPos, string rightPos) = CalculateTabPositions(pageWidth, leftMargin, rightMargin);
-            tabs.Children[0].Attributes["w:pos"] = centerPos;
-            tabs.Children[1].Attributes["w:pos"] = rightPos;
+            (string centerPos, string rightPos) = CalculateTabPositions(style, pageWidth, leftMargin, rightMargin);
+            if (centerPos == "0")
+            {
+                tabs.Children.Remove(tabs.Children[0]);
+                tabs.Children[0].Attributes["w:pos"] = rightPos;
+            }
+            else
+            {
+                tabs.Children[0].Attributes["w:pos"] = centerPos;
+                tabs.Children[1].Attributes["w:pos"] = rightPos;
+            }
             return tabs;
         }
 
-        private (string center, string right) CalculateTabPositions(string sPageWidth, string sLeftMargin, string sRightMargin)
+        private (string center, string right) CalculateTabPositions(TreeNode style, string sPageWidth, string sLeftMargin, string sRightMargin)
         {
             int pageWidth = Convert.ToInt32(sPageWidth);
             int leftMargin = Convert.ToInt32(sLeftMargin);
             int rightMargin = Convert.ToInt32(sRightMargin);
 
             int textWidth = pageWidth - leftMargin - rightMargin;
-            int center = textWidth / 2;
-            int right =  textWidth;
+            int center = 0;
+            int right = 0;
+
+            if (Enum.TryParse<AlignmentPreset>(style.Attributes["alignment"], out var alignment))
+            {
+
+                switch (alignment)
+                {
+                    case AlignmentPreset.CenterRight:
+                        center = textWidth / 2;
+                        right = textWidth;
+                        break;
+
+                    case AlignmentPreset.CenterLeft:
+                        center = 0;
+                        right = textWidth / 2;
+                        break;
+
+                    case AlignmentPreset.LeftRight:
+                        center = 0;
+                        right = textWidth;
+                        break;
+
+                    case AlignmentPreset.RightLeft:
+                        center = 0;
+                        right = textWidth;
+                        break;
+
+                    default:
+                        center = textWidth / 2;
+                        right = textWidth;
+                        break;
+                }
+            }
 
             return (center.ToString(), right.ToString());
         }

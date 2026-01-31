@@ -23,10 +23,12 @@ namespace XMLParser.Builders
         private Dictionary<string, string> CreateContainerAttributes(FormulaStyle style)
         {
             const string LINE_AROUND = "lineAround";
+            const string ALIGNMENT = "alignment";
 
             Dictionary<string, string> attributes = new Dictionary<string, string>();
 
             attributes.Add(LINE_AROUND, $"{style.EmptyLineAround.ToString().ToLower()}");
+            attributes.Add(ALIGNMENT, style.AlignmentPreset.ToString());
 
             return attributes;
         }
