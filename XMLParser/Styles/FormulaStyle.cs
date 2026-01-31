@@ -15,5 +15,6 @@ namespace XMLParser.Styles
         public bool Numeration { get; set; } = false;
         public string NumerationFormat { get; set; } = "($)";
         public string NumerationAlingnment { get; set; } = "right";
+        public bool EmptyLineAround { get; set; } = true;
     }
 }

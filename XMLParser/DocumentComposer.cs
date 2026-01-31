@@ -12,7 +12,7 @@ namespace XMLParser
     {
         private const string document = "document.xml";
 
-        public static (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root, bool splitDocument)
+        public static (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root, bool splitDocument) //нужно переработать
         {
             if (!splitDocument)
             {
@@ -177,7 +177,7 @@ namespace XMLParser
                         drawingParagraph.Children.Add(runNode);
                         drawingParagraph.Children.Insert(0, paragraphStyleNode);
 
-                        List<TreeNode> allDrawingParagraphs = AddEmptyParagraphsAroundPicture(drawingParagraph);
+                        List<TreeNode> allDrawingParagraphs = AddEmptyParagraphsAroundParagraph(drawingParagraph);
                         foreach (var paragraph_ in allDrawingParagraphs)
                         {
                             sameNumberParagraphs.Add(paragraph_);
@@ -196,7 +196,7 @@ namespace XMLParser
             return separatedParagraphs;
         }
 
-        private static List<TreeNode> AddEmptyParagraphsAroundPicture(TreeNode picture)
+        private static List<TreeNode> AddEmptyParagraphsAroundParagraph(TreeNode picture)
         {
             TreeNode firstParagraphNode = CreateParagraphNode();
             TreeNode lastParagraphNode = CreateParagraphNode();

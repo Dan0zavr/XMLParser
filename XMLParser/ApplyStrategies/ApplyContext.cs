@@ -48,7 +48,7 @@ namespace XMLParser.ApplyStrategies
                 case StyleCategory.NumberingStyleNumbered:
                     return new UselessStrategy();
                 case StyleCategory.FormulaStyle:
-                    return new ApplyFormulaStyle();
+                    return new ApplyFormulaStyleStrategy();
                 case StyleCategory.Useless:
                     return new UselessStrategy();
                 default:

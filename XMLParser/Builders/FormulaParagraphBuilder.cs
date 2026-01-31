@@ -15,8 +15,20 @@ namespace XMLParser.Builders
             {
                 TagName = "formulaContainer",
                 Children = CreateNastedNodes(style),
+                Attributes = CreateContainerAttributes(style),
                 CloseTag = true
             };
+        }
+
+        private Dictionary<string, string> CreateContainerAttributes(FormulaStyle style)
+        {
+            const string LINE_AROUND = "lineAround";
+
+            Dictionary<string, string> attributes = new Dictionary<string, string>();
+
+            attributes.Add(LINE_AROUND, $"{style.EmptyLineAround.ToString().ToLower()}");
+
+            return attributes;
         }
 
         private protected override List<TreeNode> CreateNastedNodes(FormulaStyle styleToTree)
