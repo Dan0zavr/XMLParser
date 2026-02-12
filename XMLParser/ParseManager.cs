@@ -7,6 +7,7 @@ using static XMLParser.XMLWrite;
 using static XMLParser.Cleaner;
 using static XMLParser.Tokenizator;
 using static XMLParser.DocumentComposer;
+using PDFReader;
 
 namespace XMLParser
 {
@@ -16,7 +17,7 @@ namespace XMLParser
         private const string numbering = "numbering.xml";
         private const string styles = "styles.xml";
 
-        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false)
+        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false, int[] pages = null)
         {
             string tempPath = CreateTempPath();
             try
@@ -25,7 +26,15 @@ namespace XMLParser
                 bool isNumberingExists = File.Exists(Path.Combine(tempPath, numbering));
                 var (docRoot, docSpecialTokens) = ReadXMLDocument(document, tempPath);
                 var (styleRoot, styleSpecialTokens) = ReadXMLDocument(styles, tempPath);
-                CheckDoubleBody(docRoot);
+
+                //Получаем текст со страниц
+
+                Dictionary<int, List<string>> pagesWords = PDFReaderEntry.ReadPDF(readPath, tempPath, pages, Priority.Word);
+
+                // Игнорируем абзацы
+                Stash stash = new Stash(docRoot.LongBreadthFirstSearch("w:body").First());
+                stash.StashPages(pagesWords);
+
                 TreeNode numberingRoot = new TreeNode();
                 List<string> numberingSpecialTokens = new List<string>();
 
@@ -41,7 +50,7 @@ namespace XMLParser
                 // для styles.xml  для numbering.xml
                 (var inStyles, var inNumbering) = buildDirector.BuildAllStyles(template.GetStyles());
                 Dictionary<StyleCategory, TreeNode> allStyles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);
-                CheckDoubleBody(docRoot);
+
                 XMLParser.StyleIntegrator.IntegrateStylesToTree(styleRoot, inStyles.Values.ToList());
                 TreeNode paragraphStyle = inStyles[StyleCategory.ParagraphStyle];
                 if (isNumberingExists) 
@@ -50,7 +59,7 @@ namespace XMLParser
                 }
 
                 TreeToXMLDocument(styleRoot, styleSpecialTokens, styles, tempPath);
-                CheckDoubleBody(docRoot);
+
                 //Начало применения стилей
                 
                 var (titlePage, content, mainTag) = SplitDocument(docRoot, splitDocument);
@@ -67,7 +76,7 @@ namespace XMLParser
                         ReconstructParagraphs(contentBody, paragraphsWithCaptions);
                     }
                 }
-                CheckDoubleBody(content);
+
                 CleanHandStyles(content, template, docSpecialTokens, savePath);
 
                 // применение стилей
@@ -77,11 +86,13 @@ namespace XMLParser
                     applyContext.SetStrategy(strategy.Key);
                     applyContext.ApplyStyle(docRoot, strategy.Value);
                 }
-                CheckDoubleBody(content);
+
+                stash.UnStash();
+
                 TreeNode endRoot = MergeDocument(titlePage, content, mainTag);
 
                 TreeToXMLDocument(endRoot, docSpecialTokens, document, tempPath);
-                CheckDoubleBody(endRoot);
+
                 if (isNumberingExists) 
                 {
                     TreeToXMLDocument(numberingRoot, numberingSpecialTokens, numbering, tempPath);
@@ -100,13 +111,8 @@ namespace XMLParser
         private string CreateTempPath()
         {
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempFolder);
             return tempFolder;
-        }
-
-        private void CheckDoubleBody(TreeNode root)
-        {
-            List<TreeNode> bodies = root.LongBreadthFirstSearch("w:body");
-            if (bodies.Count > 1) throw new Exception("Здесь двойной body");
         }
     }
 }

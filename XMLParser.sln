@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestParser", "TestParser\Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFReader", "..\PDFReader\PDFReader\PDFReader.csproj", "{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestIgnore", "TestIgnore\TestIgnore.csproj", "{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

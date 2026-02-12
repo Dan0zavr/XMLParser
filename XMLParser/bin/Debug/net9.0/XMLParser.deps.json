@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v9.0": {
       "XMLParser/1.0.0": {
         "dependencies": {
+          "PDFReader": "1.0.0",
           "System.IdentityModel.Tokens.Jwt": "8.13.0"
         },
         "runtime": {
@@ -75,6 +76,38 @@
           }
         }
       },
+      "PdfPig/0.1.13": {
+        "runtime": {
+          "lib/net8.0/UglyToad.PdfPig.Core.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Fonts.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Package.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokenization.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.Tokens.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          },
+          "lib/net8.0/UglyToad.PdfPig.dll": {
+            "assemblyVersion": "0.1.13.0",
+            "fileVersion": "0.1.13.0"
+          }
+        }
+      },
       "System.IdentityModel.Tokens.Jwt/8.13.0": {
         "dependencies": {
           "Microsoft.IdentityModel.JsonWebTokens": "8.13.0",
@@ -84,6 +117,17 @@
           "lib/net9.0/System.IdentityModel.Tokens.Jwt.dll": {
             "assemblyVersion": "8.13.0.0",
             "fileVersion": "8.13.0.60721"
+          }
+        }
+      },
+      "PDFReader/1.0.0": {
+        "dependencies": {
+          "PdfPig": "0.1.13"
+        },
+        "runtime": {
+          "PDFReader.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       }
@@ -137,12 +181,24 @@
       "path": "microsoft.identitymodel.tokens/8.13.0",
       "hashPath": "microsoft.identitymodel.tokens.8.13.0.nupkg.sha512"
     },
+    "PdfPig/0.1.13": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2AUWNKHbkDr2Ofgi2vVPN/Ya++jhsuHd54xeKveqKOwDiAy2E2QhczOUKyU29ADRHoEJgQUhwHFgtbD6nCZ2WA==",
+      "path": "pdfpig/0.1.13",
+      "hashPath": "pdfpig.0.1.13.nupkg.sha512"
+    },
     "System.IdentityModel.Tokens.Jwt/8.13.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-GA3moxioWoF/lzRRGNjz+7LD91tajHvS4S6zn3Y3G1p/Koes7pj6gZIt4rzGhe4iIn4rvdj9wxpmN6quObgfMw==",
       "path": "system.identitymodel.tokens.jwt/8.13.0",
       "hashPath": "system.identitymodel.tokens.jwt.8.13.0.nupkg.sha512"
+    },
+    "PDFReader/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

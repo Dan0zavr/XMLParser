@@ -23,8 +23,7 @@ namespace XMLParser
 
         public static void UnZipDocx(string readPath, string tempFolder)
         {
-            Directory.CreateDirectory(tempFolder);
-            ZipFile.ExtractToDirectory(readPath, tempFolder);
+             ZipFile.ExtractToDirectory(readPath, tempFolder);
         }
         
         
