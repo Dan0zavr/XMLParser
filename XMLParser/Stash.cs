@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace XMLParser
 {
@@ -13,14 +12,12 @@ namespace XMLParser
     {
         private const int MATCH_MIN_PERCENT = 75;
         private TreeNode _root;
-        private int _maxPages;
 
         public Dictionary<int, TreeNode> StashedParagraphs {  get; private set; }
 
-        public Stash(TreeNode root, int maxPages)
+        public Stash(TreeNode root)
         {
             _root = root;
-            _maxPages = maxPages;
         }
 
         public void UnStash()
@@ -111,28 +108,6 @@ namespace XMLParser
             }
             sequences.Add(sequence);
             return sequences;
-        }
-
-        private List<int> DetectPage(List<string> pageWords, int lastParagraph)
-        {
-            List<int> ignore = new List<int>();
-            List<TreeNode> rootChildren = _root.Children;
-            int pageIndex = 0;
-            for (int i = lastParagraph; i < rootChildren.Count; i++)
-            {
-                List<string> paragraphWords = GetParagraphWords(rootChildren[i]);
-                bool match = MatchTokensSequence(paragraphWords, pageWords, pageIndex, out double matchPercent, out int lastPageIndex);
-                if (match)
-                {
-                    ignore.Add(i);
-                    pageIndex = lastPageIndex;
-                }
-            }
-            if (ignore.Count == 0)
-            {
-                return new List<int> { -1,  -1 };
-            }
-            return new List<int> { ignore.Min(), ignore.Max() };
         }
 
         private List<int> DetectPage(Dictionary<int, List<string>> pagesWords, List<int> pagesSequence, int[] targetPages)
@@ -278,23 +253,6 @@ namespace XMLParser
                     neighbours = new List<int> { n, -1 };
                 }
             }
-            //List<int> neighbourPages;
-            //if (sequence[0] == 1 && sequence[sequence.Count - 1] == _maxPages)
-            //{
-            //    neighbourPages = new List<int> { -1, -1 };
-            //}
-            //else if (sequence[0] == 1)
-            //{
-            //    neighbourPages = new List<int> { -1, sequence[sequence.Count - 1] };
-            //}
-            //else if (sequence[sequence.Count - 1] == _maxPages)
-            //{
-            //    neighbourPages = new List<int> { sequence[0], -1 };
-            //}
-            //else
-            //{
-            //    neighbourPages = new List<int> { sequence[0], sequence[sequence.Count - 1] };
-            //}
             return neighbours;
         }
 

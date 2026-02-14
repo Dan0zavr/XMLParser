@@ -29,10 +29,10 @@ namespace XMLParser
 
                 //Получаем текст со страниц
 
-                Dictionary<int, List<string>> pagesWords = PDFReaderEntry.ReadPDF(readPath, tempPath, pages, Priority.Word, out int pagesCount);
+                Dictionary<int, List<string>> pagesWords = PDFReaderEntry.ReadPDF(readPath, tempPath, pages, Priority.Word);
 
                 // Игнорируем абзацы
-                Stash stash = new Stash(docRoot.LongBreadthFirstSearch("w:body").First(), pagesCount);
+                Stash stash = new Stash(docRoot.LongBreadthFirstSearch("w:body").First());
                 stash.StashPages(pagesWords, pages);
 
                 TreeNode numberingRoot = new TreeNode();
