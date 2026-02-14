@@ -17,7 +17,7 @@ namespace XMLParser
         private const string tablecellTagName = "w:tc";
         private const string runBlockTagName = "w:r";
 
-        public static TreeNode CleanHandStyles(TreeNode root, Template template, List<string> specialTokens, string savePath) // сделать игнорирование формул
+        public static TreeNode CleanHandStyles(TreeNode root, Template template, List<string> specialTokens) // сделать игнорирование формул
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
             foundedParents = root.QuikBreadthFirstSearch(rPrTagName);
@@ -36,8 +36,6 @@ namespace XMLParser
             }
 
             FillMissingTags(runBlockTagName, root);
-
-            
 
             return root;
         }

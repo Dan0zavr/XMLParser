@@ -19,7 +19,7 @@ namespace XMLParser
         public static string FilesInZip(string tempFolder, string oldFileName, string savePath)
         {
             string fileNameDocx = EnsureUniqueFileName(Path.GetFileNameWithoutExtension(oldFileName) + "_new" + ".docx", savePath);
-            string savePathWithFileDocx = savePath + "\\" + fileNameDocx;
+            string savePathWithFileDocx = Path.Combine(savePath, fileNameDocx);
             ZipFile.CreateFromDirectory(tempFolder, savePathWithFileDocx);
             return savePathWithFileDocx;
         }
@@ -28,12 +28,12 @@ namespace XMLParser
         {
             string newFileName = Path.GetFileNameWithoutExtension(fileName);
             int counter = 1;
-            while (File.Exists(savePath + "\\" + newFileName + ".docx"))
+            while (File.Exists(Path.Combine(savePath, newFileName + ".docx")))
             {
-                newFileName = newFileName + counter;
+                newFileName = fileName + counter;
                 counter++;
             }
-            newFileName += ".docx";
+            newFileName = newFileName + ".docx";
             return newFileName;
         }
 
