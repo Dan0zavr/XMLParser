@@ -13,9 +13,9 @@ namespace XMLParser.DocumentPipeline.Steps
         public void Execute(PiplineContext context) // возможно стоит разделить на 2 шага
         {
             string tempPath = CreateTempPath();
-            context.TempPath = tempPath;
+            context.TempDocumentDirectory = tempPath;
 
-            XMLRead.UnZipDocx(context.InputPath, context.TempPath);
+            XMLRead.UnZipDocx(context.InputPath, context.TempDocumentDirectory);
         }
 
         private string CreateTempPath()

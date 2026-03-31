@@ -13,7 +13,7 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            XMLWrite.TreeToXMLDocument(context.DocumentRoot, context.DocumentSpecialTokens, PiplineContext.DOCUMENT, context.TempPath);
+            XMLWrite.TreeToXMLDocument(context.DocumentRoot, context.DocumentSpecialTokens, PiplineContext.DOCUMENT, context.TempDocumentDirectory);
         }
     }
 }

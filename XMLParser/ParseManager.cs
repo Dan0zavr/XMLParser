@@ -15,14 +15,15 @@ namespace XMLParser
 {
     public class ParseManager
     {
-        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false, int[] pages = null)
+        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false, int[] pages = null, string tempPdfPath = null)
         {
             PiplineContext context = new PiplineContext
             {
                 InputPath = readPath,
                 OutputPath = savePath,
                 Template = template,
-                IgnorePages = pages
+                IgnorePages = pages,
+                TempPdfPath = tempPdfPath
             };
 
             try
@@ -31,6 +32,7 @@ namespace XMLParser
                 {
                     new UnzipStep(),
                     new ParseXMLStep(),
+                    new ConvertDocumentStep(),
                     new ReadPDFStep(),
                     new StashStep(),
                     new BuildStylesStep(),
@@ -49,9 +51,22 @@ namespace XMLParser
             }
             finally
             {
-                if (context.TempPath != null)
+                if (Directory.Exists(context.TempDocumentDirectory))
                 {
-                    Directory.Delete(context.TempPath, true);
+                    Directory.Delete(context.TempDocumentDirectory, true);
+                }
+
+                if(context.TempPdfPath != null)
+                {
+                    string parent = Directory.GetParent(context.TempPdfPath).FullName;
+                    if (Directory.Exists(parent))
+                    {
+                        Directory.Delete(parent, true);
+                    }
+                }
+                if (Directory.Exists(context.TempPdfDirectory))
+                {
+                    Directory.Delete(context.TempPdfDirectory, true);
                 }
             }
 

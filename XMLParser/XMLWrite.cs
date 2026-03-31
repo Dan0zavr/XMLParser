@@ -12,7 +12,7 @@ namespace XMLParser
     {
         public static void StringToXMLDocument(string text, string fileName, string tempFolder)
         {
-            string doc = tempFolder + $"\\word\\{fileName}";
+            string doc = Path.Combine(tempFolder, "word", fileName);
             File.WriteAllText(doc, text);
         }
 
@@ -30,7 +30,7 @@ namespace XMLParser
             int counter = 1;
             while (File.Exists(Path.Combine(savePath, newFileName + ".docx")))
             {
-                newFileName = fileName + counter;
+                newFileName = Path.GetFileNameWithoutExtension(fileName) + counter;
                 counter++;
             }
             newFileName = newFileName + ".docx";
@@ -84,59 +84,6 @@ namespace XMLParser
             }
 
             return node;
-        }
-
-        //public string SerializeTree(TreeNode root, List<string> specialsTokens = null)
-        //{
-
-        //}
-
-        private static string SerializeNode(TreeNode node, string marker)
-        {
-            string tag = "<" + node.TagName + SerializeAttributes(node.Attributes);
-            if (node.CloseTag)
-            {
-                tag += "/>";
-                return tag;
-            }
-            else
-            {
-                tag += ">";
-            }
-            
-            tag += SerialazeValues(node.Values);
-            if (node.Children.Count > 0) 
-            {
-                tag += marker;
-            }
-            tag += "<" + node.TagName + "/>";
-            return tag;
-
-        }
-
-        private static string SerializeAttributes(Dictionary<string, string> attributes)
-        {
-            string result = string.Empty;
-            foreach (var attr in attributes)
-            {
-                result += attr.Key + " " + SerializeAttributeValue(attr.Value) + " ";
-            }
-            return result;
-        }
-
-        private static string SerializeAttributeValue(string value)
-        {
-            return "\"" + value + "\"";
-        }
-
-        private static string SerialazeValues(List<string> values)
-        {
-            string result = string.Empty;
-            foreach (var value in values)
-            {
-                result += value + " ";
-            }
-            return result.TrimEnd(' ');
         }
     }
 }

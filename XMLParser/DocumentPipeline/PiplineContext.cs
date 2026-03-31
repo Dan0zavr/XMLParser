@@ -14,8 +14,10 @@ namespace XMLParser.DocumentPipeline
         public const string STYLES = "styles.xml";
 
         public string InputPath;
-        public string TempPath;
+        public string? TempDocumentDirectory;
         public string OutputPath;
+        public string? TempPdfDirectory;
+        public string? TempPdfPath;
         public List<string> DocumentSpecialTokens;
         public TreeNode DocumentRoot;
         public List<string> StyleSpecialTokens;

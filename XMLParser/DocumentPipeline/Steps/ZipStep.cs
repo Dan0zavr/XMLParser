@@ -12,7 +12,7 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            XMLWrite.FilesInZip(context.TempPath, Path.GetFileName(context.InputPath), context.OutputPath);
+            XMLWrite.FilesInZip(context.TempDocumentDirectory, Path.GetFileName(context.InputPath), context.OutputPath);
         }
     }
 }

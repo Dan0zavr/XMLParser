@@ -12,7 +12,7 @@ namespace XMLParser.DocumentPipeline.Steps
         {
             if (context.NumberingRoot.Children.Count > 0)
             {
-                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, context.TempPath);
+                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, context.TempDocumentDirectory);
             }
         }
     }

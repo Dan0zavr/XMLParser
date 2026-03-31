@@ -15,18 +15,6 @@ namespace XMLParser
                 if (style.TagName != "formulaContainer")root.Children.Add(style);
             }
         }
-
-        public static void IntegrateNumberingStylesToTree(TreeNode root, List<TreeNode> containers)
-        {
-            foreach (var container in containers)
-            {
-                TreeNode absStyle = container.QuikBreadthFirstSearch("w:abstractNum").First();
-                TreeNode normStyle = container.QuikBreadthFirstSearch("w:num").First();
-                root.Children.Insert(0, absStyle);
-                root.Children.Add(normStyle);
-            }
-        }
-
         // abs = абстрактный
         public static void IntegrateNumberingStylesToTree(TreeNode docRoot, TreeNode numberingRoot, List<TreeNode> myAbstractNodes, TreeNode paragraphStyle)
         {
@@ -46,11 +34,11 @@ namespace XMLParser
                 TreeNode absNum = BinarySearchById(absNums, "w:abstractNumId", absId);
                 List<TreeNode> lvlNodes = absNum.LongBreadthFirstSearch("w:lvl");
 
-                int targwtLvl = Convert.ToInt32(lvl);
+                int targetLvl = Convert.ToInt32(lvl);
                 foreach (var lvlNode in lvlNodes)
                 {
                     int currentLvl = Convert.ToInt32(lvlNode.Attributes["w:ilvl"]);
-                    if (currentLvl == targwtLvl)
+                    if (currentLvl == targetLvl)
                     {
                         string currentNumFmt = lvlNode.QuikBreadthFirstSearch("w:numFmt").First().Attributes["w:val"];
                         foreach (var myAbstractNode in myAbstractNodes)
@@ -71,7 +59,43 @@ namespace XMLParser
                 }
             }
         }
-        
+
+        public static void IntegrateNumberingStylesToTree(TreeNode docRoot, TreeNode numberingRoot, TreeNode paragraphStyle)
+        {
+            List<TreeNode> numPr = docRoot.LongBreadthFirstSearch("w:numPr");
+            List<string> lvls = numPr.Select(n => n.Children[0].Attributes["w:val"]).ToList();
+            List<string> ids = numPr.Select(n => n.Children[1].Attributes["w:val"]).ToList();
+
+            HashSet<(string id, string lvl)> values = IdAndLvlToHashSet(ids, lvls);
+
+            List<TreeNode> nums = numberingRoot.LongBreadthFirstSearch("w:num");
+            List<TreeNode> absNums = numberingRoot.LongBreadthFirstSearch("w:abstractNum");
+
+            foreach ((var id, var lvl) in values)
+            {
+                TreeNode num = BinarySearchById(nums, "w:numId", Convert.ToInt32(id));
+                int absId = Convert.ToInt32(num.Children[0].Attributes["w:val"]);
+                TreeNode absNum = BinarySearchById(absNums, "w:abstractNumId", absId);
+                List<TreeNode> lvlNodes = absNum.LongBreadthFirstSearch("w:lvl");
+
+                int targetLvl = Convert.ToInt32(lvl);
+                foreach (var lvlNode in lvlNodes)
+                {
+                    int currentLvl = Convert.ToInt32(lvlNode.Attributes["w:ilvl"]);
+                    if (currentLvl == targetLvl)
+                    {
+                        TreeNode ind = lvlNode.LongBreadthFirstSearch("w:ind").First();
+                        TreeNode pInd = paragraphStyle.LongBreadthFirstSearch("w:ind").First();
+                        string firstLine = pInd.Attributes["w:firstLine"];
+                        ind.Attributes["w:left"] = "0";
+                        ind.Attributes.Remove("w:hanging");
+                        ind.Attributes.Add("w:firstLine", firstLine);
+                        break;
+                    }
+                }
+            }
+        }
+
         //Для нумерованных списков, заменяет lvlText
         private static void SyncLvl(TreeNode lvlNode)
         {
@@ -100,7 +124,8 @@ namespace XMLParser
             TreeNode ind = paragraphStyle.QuikBreadthFirstSearch("w:ind").First();
 
             TreeNode pPr = myLvlNode.QuikBreadthFirstSearch("w:pPr").First();
-            pPr.Children.Clear();
+            TreeNode absNumInd = pPr.LongBreadthFirstSearch("w:ind").First();
+
 
             double left = Convert.ToDouble(ind.Attributes["w:left"].Replace('.', ','));
             double firstLine = Convert.ToDouble(ind.Attributes["w:firstLine"].Replace('.', ','));
@@ -118,17 +143,9 @@ namespace XMLParser
 
             string indFirstLine = $"{firstLine}".Replace(',', '.');
 
-            TreeNode numInd = new TreeNode
-            {
-                TagName = ind.TagName,
-                Attributes = new Dictionary<string, string>
-                {
-                    { "w:left",  indLeft},
-                    { "w:firstLine", indFirstLine}
-                }
-            };
-
-            pPr.Children.Add(numInd);
+            absNumInd.Attributes["w:left"] = indLeft;
+            absNumInd.Attributes["w:hanging"] = indFirstLine;
+                
         }
 
         private static TreeNode BinarySearchById(List<TreeNode> nodes, string attributeKey, int target )

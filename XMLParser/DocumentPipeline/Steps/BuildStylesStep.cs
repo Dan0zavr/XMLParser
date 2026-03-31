@@ -18,12 +18,22 @@ namespace XMLParser.DocumentPipeline.Steps
 
             XMLParser.StyleIntegrator.IntegrateStylesToTree(context.StylesRoot, inStyles.Values.ToList());
             TreeNode paragraphStyle = inStyles[StyleCategory.ParagraphStyle];
-            if (context.NumberingRoot.Children.Count > 0)
+            if (context.Template.NumberingStyle == null && File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
+            {
+                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, paragraphStyle);
+            }
+            else if (File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
             {
                 XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, inNumbering.Values.ToList(), paragraphStyle);
             }
 
-            XMLWrite.TreeToXMLDocument(context.StylesRoot, context.StyleSpecialTokens, PiplineContext.STYLES, context.TempPath);
+            if (File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
+            {
+                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, context.TempDocumentDirectory);
+            }
+
+            XMLWrite.TreeToXMLDocument(context.StylesRoot, context.StyleSpecialTokens, PiplineContext.STYLES, context.TempDocumentDirectory);
+            
         }
     }
 }
