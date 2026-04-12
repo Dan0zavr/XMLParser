@@ -23,7 +23,14 @@ namespace XMLParser
 
         public static void UnZipDocx(string readPath, string tempFolder)
         {
-             ZipFile.ExtractToDirectory(readPath, tempFolder);
+            try
+            {
+                ZipFile.ExtractToDirectory(readPath, tempFolder);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Закройте документ");
+            }
         }
         
         

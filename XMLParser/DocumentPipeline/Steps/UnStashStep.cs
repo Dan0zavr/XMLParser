@@ -11,7 +11,10 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            context.Stash.UnStash();
+            if (context.Stash != null)
+            {
+                context.Stash.UnStash();
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ namespace XMLParser.DocumentPipeline
         public string InputPath;
         public string? TempDocumentDirectory;
         public string OutputPath;
+        public string? OutputFile;
         public string? TempPdfDirectory;
         public string? TempPdfPath;
         public List<string> DocumentSpecialTokens;

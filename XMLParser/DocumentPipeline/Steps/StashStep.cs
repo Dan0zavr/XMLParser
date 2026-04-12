@@ -10,8 +10,11 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            context.Stash = new Stash(context.DocumentRoot.LongBreadthFirstSearch("w:body").First());
-            context.Stash.StashPages(context.PagesWords, context.IgnorePages);
+            if (context.IgnorePages != null) 
+            {
+                context.Stash = new Stash(context.DocumentRoot.LongBreadthFirstSearch("w:body").First());
+                context.Stash.StashPages(context.PagesWords, context.IgnorePages);
+            }
         }
     }
 }

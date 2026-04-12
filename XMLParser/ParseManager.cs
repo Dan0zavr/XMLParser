@@ -15,7 +15,7 @@ namespace XMLParser
 {
     public class ParseManager
     {
-        public string MainScript(string readPath, string savePath, Template template, bool splitDocument = false, int[] pages = null, string tempPdfPath = null)
+        public string MainScript(string readPath, string savePath, Template template, int[] pages = null, string tempPdfPath = null)
         {
             PiplineContext context = new PiplineContext
             {
@@ -42,12 +42,11 @@ namespace XMLParser
                     new ApplyStylesStep(),
                     new UnStashStep(),
                     new ApplyDocumentChangesStep(),
-                    new ApplyDocumentChangesStep(),
                     new ZipStep()
                 });
 
                 pipeline.Execute(context);
-                return context.OutputPath;
+                return context.OutputFile;
             }
             finally
             {
@@ -56,18 +55,18 @@ namespace XMLParser
                     Directory.Delete(context.TempDocumentDirectory, true);
                 }
 
-                if(context.TempPdfPath != null)
-                {
-                    string parent = Directory.GetParent(context.TempPdfPath).FullName;
-                    if (Directory.Exists(parent))
-                    {
-                        Directory.Delete(parent, true);
-                    }
-                }
-                if (Directory.Exists(context.TempPdfDirectory))
-                {
-                    Directory.Delete(context.TempPdfDirectory, true);
-                }
+                //if(context.TempPdfPath != null)
+                //{
+                //    string parent = Directory.GetParent(context.TempPdfPath).FullName;
+                //    if (Directory.Exists(parent))
+                //    {
+                //        Directory.Delete(parent, true);
+                //    }
+                //}
+                //if (Directory.Exists(context.TempPdfDirectory))
+                //{
+                //    Directory.Delete(context.TempPdfDirectory, true);
+                //}
             }
 
         }

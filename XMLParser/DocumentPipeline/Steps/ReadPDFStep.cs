@@ -13,7 +13,10 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            context.PagesWords = PDFReaderEntry.ReadPDF(context.TempPdfPath, context.IgnorePages);
+            if (context.IgnorePages != null) 
+            {
+                context.PagesWords = PDFReaderEntry.ReadPDF(context.TempPdfPath, context.IgnorePages);
+            }
         }
     }
 }
