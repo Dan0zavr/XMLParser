@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.Styles;
 using static XMLParser.TreeNode;
 
 namespace XMLParser
@@ -11,102 +12,6 @@ namespace XMLParser
     public static class DocumentComposer
     {
         private const string document = "document.xml";
-
-        public static (TreeNode titlePage, TreeNode content, TreeNode mainTag) SplitDocument(TreeNode root, bool splitDocument) //нужно переработать
-        {
-            if (!splitDocument)
-            {
-                TreeNode mTag = DuplicateNodeWithAttributes(root);
-
-                TreeNode tPage = DuplicateNodeWithAttributes(root);
-
-                return (tPage, root, mTag);
-            }
-
-            List<TreeNode> titlePageChildren = new List<TreeNode>();
-            List<TreeNode> contentChildren = new List<TreeNode>();
-            TreeNode? sectionProperties = null;
-
-            bool pageBreakFound = false;
-
-            if (root.Children.Count == 0 || root.Children[0].Children == null)
-            {
-                // Пустой документ
-                return (new TreeNode { TagName = "w:body", CloseTag = true },
-                        new TreeNode { TagName = "w:body", CloseTag = true },
-                        new TreeNode { TagName = root.TagName, CloseTag = true, Attributes = root.Attributes });
-            }
-
-            foreach (TreeNode paragraph in root.Children[0].Children)
-            {
-                // Проверяем наличие разрыва страницы или секции
-                if (!pageBreakFound) pageBreakFound = TryFindPageBreak(paragraph, out sectionProperties);
-
-                if (!pageBreakFound) titlePageChildren.Add(paragraph);
-                else contentChildren.Add(paragraph);
-            }
-
-            // Если разрыва не было найдено, значит титульной части нет — всё идёт в content
-            if (!pageBreakFound)
-            {
-                contentChildren = titlePageChildren;
-                titlePageChildren = new List<TreeNode>();
-            }
-
-            // Убедимся, что sectionProperties присутствует в конце
-            if (sectionProperties != null && !contentChildren.Contains(sectionProperties))
-            {
-                contentChildren.Add(sectionProperties);
-            }
-
-            TreeNode titlePage = CreateBodyNode(titlePageChildren);
-            TreeNode content = CreateBodyNode(contentChildren);
-
-            TreeNode mainTag = DuplicateNodeWithAttributes(root);
-
-            return (titlePage, content, mainTag);
-        }
-
-        private static bool TryFindPageBreak(TreeNode paragraph, out TreeNode sectionProperties)
-        {
-            sectionProperties = paragraph.QuikBreadthFirstSearch("w:sectPr").FirstOrDefault();
-            if (sectionProperties != null)
-                return true;
-
-            foreach (TreeNode breakNode in paragraph.QuikBreadthFirstSearch("w:br"))
-            {
-                if (breakNode.Attributes.TryGetValue("w:type", out string value) && value == "page")
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private static TreeNode DuplicateNodeWithAttributes(TreeNode node)
-        {
-            TreeNode duplicatedNode = new TreeNode
-            {
-                TagName = node.TagName,
-                CloseTag = true,
-                Attributes = node.Attributes
-            };
-            return duplicatedNode;
-        }
-
-        public static TreeNode MergeDocument(TreeNode titlePage, TreeNode content, TreeNode mainTag)
-        {
-            TreeNode document = new TreeNode()
-            {
-                TagName = "w:body",
-                CloseTag = true,
-            };
-            document.Children.AddRange(titlePage.Children);
-            document.Children.AddRange(content.Children[0].Children);
-            mainTag.Children.Add(document);
-
-            return mainTag;
-        }
 
         //ключ соответствует номеру абзаца, начиная с 0
         public static Dictionary<int, TreeNode> ExtractPicturesFromParagraphToDictionary(TreeNode body)
@@ -177,11 +82,7 @@ namespace XMLParser
                         drawingParagraph.Children.Add(runNode);
                         drawingParagraph.Children.Insert(0, paragraphStyleNode);
 
-                        List<TreeNode> allDrawingParagraphs = AddEmptyParagraphsAroundParagraph(drawingParagraph);
-                        foreach (var paragraph_ in allDrawingParagraphs)
-                        {
-                            sameNumberParagraphs.Add(paragraph_);
-                        }
+                        sameNumberParagraphs.Add(drawingParagraph);
                     }
                     else
                     {
@@ -213,7 +114,7 @@ namespace XMLParser
             }
         }
 
-        private static TreeNode CreateParagraphNode()
+        public static TreeNode CreateParagraphNode()
         {
             return new TreeNode()
             {

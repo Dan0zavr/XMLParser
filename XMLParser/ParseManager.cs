@@ -33,14 +33,14 @@ namespace XMLParser
                     new UnzipStep(),
                     new ParseXMLStep(),
                     new ConvertDocumentStep(),
-                    new ReadPDFStep(),
-                    new StashStep(),
+                    //new ReadPDFStep(),
+                    //new StashStep(),
                     new BuildStylesStep(),
                     new ApplyStyleChangesStep(),
                     new ReconstructParagraphsStep(),
                     new CleanStylesStep(),
                     new ApplyStylesStep(),
-                    new UnStashStep(),
+                    //new UnStashStep(),
                     new ApplyDocumentChangesStep(),
                     new ZipStep()
                 });

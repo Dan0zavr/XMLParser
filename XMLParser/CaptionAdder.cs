@@ -10,52 +10,47 @@ namespace XMLParser
 {
     public static class CaptionAdder
     {
-        public static Dictionary<int, List<TreeNode>> AddCaption(TreeNode root, PictureStyle style)
+        public static void AddCaption(Dictionary<int, List<TreeNode>> extendedParagaphs, PictureStyle style)
         {
             int counter = 1;
-            int paragraphNumber = 0;
             TreeNode captionNode = CreateCaptionNode(style);
-            List<TreeNode> paragraphs = root.LongBreadthFirstSearch("w:p");
-            List<TreeNode> drawingParagraphs = new List<TreeNode>();
-            Dictionary<int, List<TreeNode>> newParagraphs = new Dictionary<int, List<TreeNode>>();
 
-            foreach (TreeNode paragraph in paragraphs) 
-            {               
-                if (paragraph.ContainsChild("w:drawing"))
-                {
-                    TreeNode captionParagraph = new TreeNode() 
-                    { 
-                        TagName = "w:p",
-                        Children = new List<TreeNode>{
-                            new TreeNode
+            foreach (var sameNumberParagraphs in extendedParagaphs.Values) 
+            {
+                for (int i = sameNumberParagraphs.Count - 1; i >= 0; i--) {
+                    if (sameNumberParagraphs[i].QuikBreadthFirstSearch("w:drawing").Count > 0)
+                    {
+                        TreeNode captionParagraph = new TreeNode()
+                        {
+                            TagName = "w:p",
+                            Children = new List<TreeNode>
                             {
-                                TagName = "w:pPr",
-                                Children = new List<TreeNode>(),
-                                CloseTag = true
-                            }
-                        },
-                        CloseTag = true
-                    };
+                                new TreeNode
+                                {
+                                    TagName = "w:pPr",
+                                    Children = new List<TreeNode>(),
+                                    CloseTag = true
+                                }
+                            },
+                            CloseTag = true
+                        };
 
-                    TreeNode currentCaption = captionNode.Clone();
-                    TreeNode labelNode = currentCaption.QuikBreadthFirstSearch("w:t").First();
-                    string label = style.LabelValue;
-                    label = label.Replace(PictureStyle.NumMarker, counter.ToString());
-                    labelNode.Values.Clear();
-                    labelNode.Values.Add(label);
+                        TreeNode currentCaption = captionNode.Clone();
 
-                    captionParagraph.Children.Add(currentCaption);
-                    counter++;
+                        //Устанавливаем содержимое подписи
+                        TreeNode labelNode = currentCaption.QuikBreadthFirstSearch("w:t").First();
+                        string label = style.LabelValue;
+                        label = label.Replace(PictureStyle.NumMarker, counter.ToString());
+                        labelNode.Values.Clear();
+                        labelNode.Values.Add(label);
 
-                    newParagraphs.Add(paragraphNumber, new List<TreeNode> { paragraph, captionParagraph });
+                        captionParagraph.Children.Add(currentCaption);
+                        counter++;
+                        int j = i;
+                        sameNumberParagraphs.Insert(++j, captionParagraph);
+                    }
                 }
-                else
-                {
-                    newParagraphs.Add(paragraphNumber, new List<TreeNode> { paragraph});
-                }
-                paragraphNumber++;
             }
-            return newParagraphs;
         }
 
         private static TreeNode CreateCaptionNode(PictureStyle style)

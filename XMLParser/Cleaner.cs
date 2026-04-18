@@ -66,10 +66,7 @@ namespace XMLParser
             {
                 if (!block.Children.Any(child => child.TagName == rPrTagName))
                 {
-                    List<TreeNode> children = block.Children;
-                    block.Children.Clear();
-                    block.Children.Add(CreateRPrTag());
-                    block.Children.AddRange(children);
+                    block.Children.Insert(0, CreateRPrTag());
                 }
             }
         }
