@@ -124,11 +124,21 @@ namespace XMLParser
             };
         }
 
-        private static TreeNode CreateParagraphStyleNode()
+        public static TreeNode CreateParagraphStyleNode()
         {
             return new TreeNode()
             {
                 TagName = "w:pPr",
+                CloseTag = true,
+                Children = new List<TreeNode>()
+            };
+        }
+
+        public static TreeNode CreateTextStyleNode()
+        {
+            return new TreeNode()
+            {
+                TagName = "w:rPr",
                 CloseTag = true,
                 Children = new List<TreeNode>()
             };

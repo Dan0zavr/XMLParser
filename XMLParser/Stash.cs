@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,16 +12,18 @@ namespace XMLParser
     public class Stash
     {
         private const int MATCH_MIN_PERCENT = 75;
+        private const string TABLE_NODE_NAME = "w:tbl";
         private TreeNode _root;
 
-        public Dictionary<int, TreeNode> StashedParagraphs {  get; private set; }
+        public Dictionary<int, TreeNode> StashedParagraphs {  get; private set; } = new Dictionary<int, TreeNode>();
+        public Dictionary<int, TreeNode> StashedTables { get; private set; } = new Dictionary<int, TreeNode>();
 
         public Stash(TreeNode root)
         {
             _root = root;
         }
 
-        public void UnStash()
+        public void UnStashPages()
         {
             Queue<TreeNode> paragraphs = new Queue<TreeNode>(_root.Children);
             Queue<TreeNode> newParagraphStructure = new Queue<TreeNode>();
@@ -85,6 +88,41 @@ namespace XMLParser
             }
 
             StashedParagraphs = stash;
+        }
+
+        public void UnStashTables()
+        {
+            List<TreeNode> tables = _root.LongBreadthFirstSearch(TABLE_NODE_NAME);
+            for(int i = 0; i < tables.Count; i++)
+            {
+                if (StashedTables.ContainsKey(i))
+                {
+                    tables[i].Children = StashedTables[i].Children;
+                    StashedTables.Remove(i);
+                }
+            }
+        }
+
+        public void StashTables()
+        {
+            Dictionary<int, TreeNode> stash = new Dictionary<int, TreeNode>();
+
+            List<TreeNode> tables = _root.LongBreadthFirstSearch(TABLE_NODE_NAME);
+
+            for (int i = 0; i < tables.Count; i++)
+            {
+                TreeNode childrenHolder = new TreeNode
+                {
+                    TagName = "holder",
+                    CloseTag = true,
+                    Children = tables[i].Clone().Children
+                };
+
+                stash.Add(i, childrenHolder);
+                tables[i].Children.Clear();
+            }
+
+            StashedTables = stash;
         }
 
         private List<List<int>> DetectSequences(List<int> pages)

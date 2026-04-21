@@ -13,7 +13,7 @@ namespace XMLParser.DocumentPipeline.Steps
         {
             if (context.Stash != null)
             {
-                context.Stash.UnStash();
+                context.Stash.UnStashPages();
             }
         }
     }

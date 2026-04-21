@@ -33,6 +33,8 @@ namespace XMLParser.DocumentPipeline.Steps
             }
 
             DocumentComposer.ReconstructParagraphs(contentBody, extendedParagaphs);
+
+            FillMissedStylesParentNode(contentBody);
         }
 
         private void AddEmptyParagraphs(Dictionary<int, List<TreeNode>> extendedParagaphs)
@@ -46,6 +48,36 @@ namespace XMLParser.DocumentPipeline.Steps
                         int j = i;
                         sameNumbersParagraphs.Insert(++j, DocumentComposer.CreateParagraphNode());
                         sameNumbersParagraphs.Insert(--j, DocumentComposer.CreateParagraphNode());
+                    }
+                }
+            }
+        }
+
+        private void FillMissedStylesParentNode(TreeNode root)
+        {
+            List<TreeNode> paragraphNodes = root.LongBreadthFirstSearch("w:p");
+            foreach (var paragraphNode in paragraphNodes)
+            {
+                if (!paragraphNode.CloseTag)
+                {
+                    paragraphNode.CloseTag = true;
+                }
+
+                if (paragraphNode.QuikBreadthFirstSearch("w:pPr").Count == 0)
+                {
+                    TreeNode pPr = DocumentComposer.CreateParagraphStyleNode();
+                    TreeNode rPr = DocumentComposer.CreateTextStyleNode();
+                    pPr.Children.Add(rPr);
+                    paragraphNode.Children.Insert(0, pPr);
+                }
+
+                if (paragraphNode.QuikBreadthFirstSearch("w:rPr").Count == 0)
+                {
+                    TreeNode rPr = DocumentComposer.CreateTextStyleNode();
+                    TreeNode pPr = paragraphNode.QuikBreadthFirstSearch("w:pPr").FirstOrDefault();
+                    if (pPr != null)
+                    {
+                        pPr.Children.Add(rPr);
                     }
                 }
             }

@@ -24,7 +24,7 @@ namespace XMLParser
             return savePathWithFileDocx;
         }
 
-        private static string EnsureUniqueFileName(string fileName, string savePath)
+        public static string EnsureUniqueFileName(string fileName, string savePath)
         {
             string newFileName = Path.GetFileNameWithoutExtension(fileName);
             int counter = 1;

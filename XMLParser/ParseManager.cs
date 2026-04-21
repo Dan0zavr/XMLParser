@@ -33,14 +33,14 @@ namespace XMLParser
                     new UnzipStep(),
                     new ParseXMLStep(),
                     new ConvertDocumentStep(),
-                    //new ReadPDFStep(),
-                    //new StashStep(),
+                    new ReadPDFStep(),
+                    new StashStep(),
                     new BuildStylesStep(),
                     new ApplyStyleChangesStep(),
                     new ReconstructParagraphsStep(),
                     new CleanStylesStep(),
                     new ApplyStylesStep(),
-                    //new UnStashStep(),
+                    new UnStashStep(),
                     new ApplyDocumentChangesStep(),
                     new ZipStep()
                 });
@@ -55,18 +55,18 @@ namespace XMLParser
                     Directory.Delete(context.TempDocumentDirectory, true);
                 }
 
-                //if(context.TempPdfPath != null)
-                //{
-                //    string parent = Directory.GetParent(context.TempPdfPath).FullName;
-                //    if (Directory.Exists(parent))
-                //    {
-                //        Directory.Delete(parent, true);
-                //    }
-                //}
-                //if (Directory.Exists(context.TempPdfDirectory))
-                //{
-                //    Directory.Delete(context.TempPdfDirectory, true);
-                //}
+                if (context.TempPdfPath != null)
+                {
+                    string parent = Directory.GetParent(context.TempPdfPath).FullName;
+                    if (Directory.Exists(parent))
+                    {
+                        Directory.Delete(parent, true);
+                    }
+                }
+                if (Directory.Exists(context.TempPdfDirectory))
+                {
+                    Directory.Delete(context.TempPdfDirectory, true);
+                }
             }
 
         }

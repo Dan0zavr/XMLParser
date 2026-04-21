@@ -19,11 +19,14 @@ namespace XMLParser.ApplyStrategies
             string styleTagName = "w:pStyle";
             string tagName = "w:pPr";
             string styleName = style.Attributes["w:styleId"];
+            Stash stash = new Stash(root);
 
             TreeNode applyStyle = CreateStyleNode(styleTagName, styleName);
 
             ApplyStylesToNodes(root, tagName, applyStyle);
+
             //ApplyParagraphStyleToNumbering(root, applyStyle);
+
         }
 
         private void ApplyParagraphStyleToNumbering(TreeNode root, TreeNode style)

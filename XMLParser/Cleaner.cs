@@ -20,10 +20,17 @@ namespace XMLParser
         public static TreeNode CleanHandStyles(TreeNode root, Template template, List<string> specialTokens) // сделать игнорирование формул
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
+
+            Stash stash = new Stash(root);
+
+            stash.StashTables();
+
             foundedParents = root.QuikBreadthFirstSearch(rPrTagName);
             root.TerminateChildren(foundedParents);
             foundedParents = root.QuikBreadthFirstSearch(pPrTagName);
             root.TerminateChildren(foundedParents);
+
+            stash.UnStashTables();
 
             if (template.NumberingStyle != null) {
                 foundedParents = root.QuikBreadthFirstSearch(numPrTagName);
