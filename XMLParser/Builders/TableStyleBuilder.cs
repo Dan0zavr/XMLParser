@@ -131,8 +131,12 @@ namespace XMLParser.Builders
                 TreeNode paddingNode = new TreeNode
                 {
                     TagName = side,
-                    Attributes = { { "w:w", pad }, { "w:type", "dxa" } }
+                    Attributes = { { "w:w", "0" }, { "w:type", "dxa" } }
                 };
+                if (side == "w:left" || side == "w:right")
+                {
+                    paddingNode.Attributes["w:w"] = "110";
+                }
                 padding.Add(paddingNode);
             }
 
