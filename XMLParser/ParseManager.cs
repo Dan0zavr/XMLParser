@@ -1,15 +1,16 @@
-﻿using XMLParser.ApplyStrategies;
+﻿using PDFReader;
+using System.Diagnostics;
+using XMLParser.ApplyStrategies;
 using XMLParser.Builders;
+using XMLParser.DocumentPipeline;
+using XMLParser.DocumentPipeline.Steps;
 using XMLParser.Styles;
+using static XMLParser.Cleaner;
+using static XMLParser.DocumentComposer;
+using static XMLParser.Tokenizator;
 using static XMLParser.TreeNode;
 using static XMLParser.XMLRead;
 using static XMLParser.XMLWrite;
-using static XMLParser.Cleaner;
-using static XMLParser.Tokenizator;
-using static XMLParser.DocumentComposer;
-using PDFReader;
-using XMLParser.DocumentPipeline.Steps;
-using XMLParser.DocumentPipeline;
 
 namespace XMLParser
 {

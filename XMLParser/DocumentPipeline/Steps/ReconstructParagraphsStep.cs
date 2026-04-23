@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using XMLParser.Styles;
+using System.Diagnostics;
 
 namespace XMLParser.DocumentPipeline.Steps
 {
@@ -13,6 +14,8 @@ namespace XMLParser.DocumentPipeline.Steps
         public void Execute(PiplineContext context)
         {
             TreeNode contentBody = context.DocumentRoot.LongBreadthFirstSearch("w:body").First();
+
+            FillMissedStylesParentNode(contentBody);
 
             if (context.Template.PictureStyle == null) return;
 
@@ -33,8 +36,6 @@ namespace XMLParser.DocumentPipeline.Steps
             }
 
             DocumentComposer.ReconstructParagraphs(contentBody, extendedParagaphs);
-
-            FillMissedStylesParentNode(contentBody);
         }
 
         private void AddEmptyParagraphs(Dictionary<int, List<TreeNode>> extendedParagaphs)
