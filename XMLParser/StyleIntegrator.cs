@@ -121,31 +121,40 @@ namespace XMLParser
 
         private static void AddInd(TreeNode myLvlNode, int currentLvl, TreeNode paragraphStyle)
         {
-            TreeNode ind = paragraphStyle.QuikBreadthFirstSearch("w:ind").First();
+            TreeNode ind = paragraphStyle.QuikBreadthFirstSearch("w:ind").FirstOrDefault();
+
+            double left = 0;
+            double firstLine = 0;
+
+            if (ind != null)
+            {
+                if (ind.Attributes.ContainsKey("w:left"))
+                    left = Convert.ToDouble(ind.Attributes["w:left"].Replace('.', ','));
+
+                if (ind.Attributes.ContainsKey("w:firstLine"))
+                    firstLine = Convert.ToDouble(ind.Attributes["w:firstLine"].Replace('.', ','));
+            }
 
             TreeNode pPr = myLvlNode.QuikBreadthFirstSearch("w:pPr").First();
-            TreeNode absNumInd = pPr.LongBreadthFirstSearch("w:ind").First();
 
-
-            double left = Convert.ToDouble(ind.Attributes["w:left"].Replace('.', ','));
-            double firstLine = Convert.ToDouble(ind.Attributes["w:firstLine"].Replace('.', ','));
-
-            string indLeft;
-
-            if (currentLvl == 0)
+            TreeNode absNumInd = pPr.LongBreadthFirstSearch("w:ind").FirstOrDefault();
+            if (absNumInd == null)
             {
-                indLeft = $"{left}".Replace(',', '.');
-            }
-            else 
-            {
-                indLeft = $"{left + ((currentLvl + 1) * 360) + firstLine}".Replace(',', '.');
+                absNumInd = new TreeNode
+                {
+                    TagName = "w:ind"
+                };
+                pPr.Children.Add(absNumInd);
             }
 
-            string indFirstLine = $"{firstLine}".Replace(',', '.');
+            double step = 720;
 
-            absNumInd.Attributes["w:left"] = indLeft;
-            absNumInd.Attributes["w:hanging"] = indFirstLine;
-                
+            double newLeft = left + currentLvl * step;
+
+            absNumInd.Attributes["w:left"] = newLeft.ToString().Replace(',', '.');
+            absNumInd.Attributes["w:firstLine"] = firstLine.ToString().Replace(',', '.');
+
+            absNumInd.Attributes.Remove("w:hanging");
         }
 
         private static TreeNode BinarySearchById(List<TreeNode> nodes, string attributeKey, int target )

@@ -86,7 +86,7 @@ namespace XMLParser.Builders
                 lvlNode.Children.Add(new TreeNode
                 {
                     TagName = "w:lvlText",
-                    Attributes = { { "w:val", styleToTree.Marker.Replace("%1", $"%{level + 1}") } }
+                    Attributes = { { "w:val", styleToTree.Marker.Replace("$", $"%{level + 1}") } }
                 });
 
                 lvlNode.Children.Add(new TreeNode
