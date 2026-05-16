@@ -23,22 +23,22 @@ namespace XMLParser
 
             Stash stash = new Stash(root);
 
-            stash.StashTables();
+            //stash.StashTables();
 
-            foundedParents = root.QuikBreadthFirstSearch(rPrTagName);
+            foundedParents = root.LongBreadthFirstSearch(rPrTagName);
             root.TerminateChildren(foundedParents);
-            foundedParents = root.QuikBreadthFirstSearch(pPrTagName);
+            foundedParents = root.LongBreadthFirstSearch(pPrTagName);
             root.TerminateChildren(foundedParents);
 
-            stash.UnStashTables();
+            //.UnStashTables();
 
             if (template.NumberingStyle != null) {
-                foundedParents = root.QuikBreadthFirstSearch(numPrTagName);
+                foundedParents = root.LongBreadthFirstSearch(numPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
             if (template.TableStyle != null) {
-                foundedParents = root.QuikBreadthFirstSearch(tblPrTagName);
+                foundedParents = root.LongBreadthFirstSearch(tblPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
@@ -57,9 +57,9 @@ namespace XMLParser
             {
                 List<TreeNode> foundedParents = new List<TreeNode>();
 
-                foundedParents = cell.QuikBreadthFirstSearch(rPrTagName);
+                foundedParents = cell.LongBreadthFirstSearch(rPrTagName);
                 root.TerminateChildren(foundedParents);
-                foundedParents = cell.QuikBreadthFirstSearch(pPrTagName);
+                foundedParents = cell.LongBreadthFirstSearch(pPrTagName);
                 root.TerminateChildren(foundedParents);
             }
 
