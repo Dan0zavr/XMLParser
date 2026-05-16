@@ -12,7 +12,7 @@ namespace XMLParser
         {
             foreach (TreeNode style in styles)
             {
-                if (style.TagName != "formulaContainer")root.Children.Add(style);
+                if (style.TagName != "formulaContainer" && style.TagName != "globalContainer") root.Children.Add(style);
             }
         }
         // abs = абстрактный

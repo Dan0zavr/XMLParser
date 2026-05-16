@@ -21,16 +21,10 @@ namespace XMLParser
         {
             List<TreeNode> foundedParents = new List<TreeNode>();
 
-            Stash stash = new Stash(root);
-
-            //stash.StashTables();
-
             foundedParents = root.LongBreadthFirstSearch(rPrTagName);
             root.TerminateChildren(foundedParents);
             foundedParents = root.LongBreadthFirstSearch(pPrTagName);
             root.TerminateChildren(foundedParents);
-
-            //.UnStashTables();
 
             if (template.NumberingStyle != null) {
                 foundedParents = root.LongBreadthFirstSearch(numPrTagName);

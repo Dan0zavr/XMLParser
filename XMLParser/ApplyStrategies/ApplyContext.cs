@@ -49,6 +49,8 @@ namespace XMLParser.ApplyStrategies
                     return new UselessStrategy();
                 case StyleCategory.FormulaStyle:
                     return new ApplyFormulaStyleStrategy();
+                case StyleCategory.Global:
+                    return new ApplyGlobalStyleStrategy();
                 case StyleCategory.Useless:
                     return new UselessStrategy();
                 default:

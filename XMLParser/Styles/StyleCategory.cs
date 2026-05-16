@@ -18,6 +18,7 @@ namespace XMLParser.Styles
         NumberingStyleNumbered,
         NumberingStyleMarked,
         FormulaStyle,
-        Useless
+        Useless,
+        Global
     }
 }

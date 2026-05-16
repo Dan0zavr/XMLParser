@@ -61,6 +61,13 @@ namespace XMLParser.Builders
                     TreeNode formulaContainer = formulaBuilder.BuildStyle(formulaStyle);
                     stylesResult.Add(StyleCategory.FormulaStyle, formulaContainer);
                 }
+                else if (style is GlobalStyle)
+                {
+                    GlobalStyle globalStyle = (GlobalStyle)style;
+                    GlobalStyleBuilder globalStyleBuilder = (GlobalStyleBuilder)builder;
+                    TreeNode globalStyleContainer = globalStyleBuilder.BuildStyle(globalStyle);
+                    stylesResult.Add(StyleCategory.Global, globalStyleContainer);
+                }
                 else
                 {
                     throw new Exception($"Необработанный стиль {style.GetType()}");
