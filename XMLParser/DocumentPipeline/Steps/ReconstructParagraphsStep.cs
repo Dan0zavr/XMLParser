@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using XMLParser.Styles;
 using System.Diagnostics;
+using UglyToad.PdfPig.Fonts.Encodings;
 
 namespace XMLParser.DocumentPipeline.Steps
 {
@@ -16,6 +17,14 @@ namespace XMLParser.DocumentPipeline.Steps
             TreeNode contentBody = context.DocumentRoot.LongBreadthFirstSearch("w:body").First();
 
             FillMissedStylesParentNode(contentBody);
+
+            if (context.Template.TableStyle != null)
+            {
+                if (context.Template.TableStyle.LabelValue != null)
+                {
+                    CaptionAdder.AddTableCaption(contentBody, context.Template.TableStyle);
+                }
+            }
 
             if (context.Template.PictureStyle == null) return;
 
@@ -32,7 +41,7 @@ namespace XMLParser.DocumentPipeline.Steps
 
             if (context.Template.PictureStyle.AutoGenerateLable)
             {
-                CaptionAdder.AddCaption(extendedParagaphs, context.Template.PictureStyle);
+                CaptionAdder.AddPictureCaption(extendedParagaphs, context.Template.PictureStyle);
             }
 
             DocumentComposer.ReconstructParagraphs(contentBody, extendedParagaphs);

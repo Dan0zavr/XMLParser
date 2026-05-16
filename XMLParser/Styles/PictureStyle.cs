@@ -8,7 +8,6 @@ namespace XMLParser.Styles
 {
     public class PictureStyle : IStyle
     {
-        public const string NumMarker = "@";
         public string StyleType => "PictureStyle";
 
         public bool AutoGenerateLable { get; set; } = false;
