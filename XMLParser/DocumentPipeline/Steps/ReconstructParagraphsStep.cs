@@ -36,6 +36,36 @@ namespace XMLParser.DocumentPipeline.Steps
             }
 
             DocumentComposer.ReconstructParagraphs(contentBody, extendedParagaphs);
+
+            if (context.Template.PictureStyle.AutoGenerateLable)
+            {
+                AddKeepCaption(contentBody);
+            }
+        }
+
+        private void AddKeepCaption(TreeNode body) //Чтобы рисунок и подпись всегда были на одной странице
+        {
+            List<TreeNode> paragraphs = body.LongBreadthFirstSearch("w:p");
+            List<TreeNode> paragraphsWithDrawings = new List<TreeNode>();
+            foreach (var paragraph in paragraphs)
+            {
+                List<TreeNode> drawings = paragraph.LongBreadthFirstSearch("w:drawing"); 
+
+                if(drawings.Count > 0)
+                {
+                    paragraphsWithDrawings.Add(paragraph);
+                }
+            }
+
+            foreach(var paragraph in paragraphsWithDrawings)
+            {
+                TreeNode pPr = paragraph.LongBreadthFirstSearch("w:pPr").FirstOrDefault();
+
+                if(pPr != null)
+                {
+                    pPr.Children.Insert(0, new TreeNode { TagName = "w:keepNext"});
+                }
+            }
         }
 
         private void AddEmptyParagraphs(Dictionary<int, List<TreeNode>> extendedParagaphs)

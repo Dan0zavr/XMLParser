@@ -15,13 +15,13 @@ namespace XMLParser.ApplyStrategies
 
             foreach (var paragraph in paragraphsWithDrawings)
             {
-                List<TreeNode> oldStyle = paragraph.QuikBreadthFirstSearch("w:pPr");
+                List<TreeNode> oldStyles = paragraph.QuikBreadthFirstSearch("w:pPr");
 
-                paragraph.TerminateChildren(oldStyle);
+                paragraph.TerminateChildren(oldStyles);
 
                 TreeNode styleToApply = CreateStyleToApply(style);
 
-                foreach (TreeNode styleElement in oldStyle)
+                foreach (TreeNode styleElement in oldStyles)
                 {
                     styleElement.Children.Add(styleToApply);
                 }
