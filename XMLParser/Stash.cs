@@ -68,6 +68,9 @@ namespace XMLParser
 
             for(int i = 0; i < pagesNumbersSequences.Count; i++)
             {
+                if (!pagesNumbersSequences[i].Any(p => targetPages.Contains(p)))
+                    continue;
+
                 List<int> startEnd = DetectPage(pagesSequences[i], pagesNumbersSequences[i], targetPages);
                 if (startEnd[0] == -1 && startEnd[1] == -1)
                 {
@@ -82,7 +85,7 @@ namespace XMLParser
                 for (int j = startEndPages[i][1]; j >= startEndPages[i][0]; j--)
                 {
                     TreeNode child = _root.Children[j];
-                    stash.Add(j, child);
+                    stash.Add(j, child.Clone());
                     _root.Children.RemoveAt(j);
                 }
             }
@@ -169,7 +172,7 @@ namespace XMLParser
             }
             else
             {
-                int lastParagraph = GetStartIndextNeighbourPage(pagesWords[neighbourPages[1]]);
+                int lastParagraph = GetStartIndexNeighbourPage(pagesWords[neighbourPages[1]]);
                 lastIgnoreIndex = GetFirstParagraphWithText(lastParagraph);// w:p где есть w:r
             }
 
@@ -195,7 +198,7 @@ namespace XMLParser
             return 0;
         }
 
-        private int GetStartIndextNeighbourPage(List<string> pageWords)
+        private int GetStartIndexNeighbourPage(List<string> pageWords)
         {
             List<int> ignore = new List<int>();
             int pageIndex = 0;
@@ -276,22 +279,24 @@ namespace XMLParser
 
         private List<int> DetectNeighbourPages(List<int> sequence, int[] targetPages)
         {
-            List<int> neighbours = sequence.Except(targetPages.ToList()).ToList();
+            int leftNeighbour = -1;
+            int rightNeighbour = -1;
 
-            if (neighbours.Count == 1)
+            int minTarget = targetPages.Min();
+            int maxTarget = targetPages.Max();
+
+            foreach (int page in sequence)
             {
-                if (neighbours[0] > targetPages[0])
+                if (page < minTarget && page > leftNeighbour)
+                    leftNeighbour = page;
+                if (page > maxTarget)
                 {
-                    int n = neighbours[0];
-                    neighbours = new List<int> { -1, n };
-                }
-                else if (neighbours[0] < targetPages[targetPages.Length - 1])
-                {
-                    int n = neighbours[0];
-                    neighbours = new List<int> { n, -1 };
+                    rightNeighbour = page;
+                    break;
                 }
             }
-            return neighbours;
+
+            return new List<int> { leftNeighbour, rightNeighbour };
         }
 
         private List<string> GetParagraphWords(TreeNode paragraph)

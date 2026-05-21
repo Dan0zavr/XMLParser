@@ -39,7 +39,7 @@ namespace XMLParser.ApplyStrategies
                 if (number != null)
                 {
                     string numberingFormat = number.Values[0].ToString();
-                    string numberValue = numberingFormat.Replace('$', Convert.ToChar(counter.ToString()));
+                    string numberValue = numberingFormat.Replace("$", counter.ToString());
                     number.TagName = "w:t";
                     number.Values[0] = numberValue;
                 }
