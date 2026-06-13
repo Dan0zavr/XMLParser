@@ -17,7 +17,7 @@ namespace XMLParser.Styles
         public TableStyle? TableStyle { get; set; }
         public PictureStyle? PictureStyle { get; set; }
         public FormulaStyle? FormulaStyle { get; set; }
-        public GlobalStyle GlobalStyle { get; set; }
+        public GlobalStyle? GlobalStyle { get; set; }
 
         public Dictionary<IStyle, IStyleBuilder> GetStyles()
         {

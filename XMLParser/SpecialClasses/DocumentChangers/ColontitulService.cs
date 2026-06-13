@@ -243,45 +243,51 @@ namespace XMLParser.SpecialClasses.DocumentChangers
                     sectPrs[0].Children.Add(titelPage);
                 }
 
-                TreeNode clone2 = referenceNode.Clone();
-                clone2.Attributes["w:type"] = "default";
-                clone2.Attributes["r:id"] = emptyId;
-
-                List<TreeNode> nodes2 = sectPrs[0].LongBreadthFirstSearch("w:footerReference");
-                bool isDefaultFound = false;
-                foreach (var node in nodes2)
+                if (_context.Template.GlobalStyle.LastNoNumberingPage > 0)
                 {
-                    if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                    TreeNode clone2 = referenceNode.Clone();
+                    clone2.Attributes["w:type"] = "default";
+                    clone2.Attributes["r:id"] = emptyId;
+
+                    List<TreeNode> nodes2 = sectPrs[0].LongBreadthFirstSearch("w:footerReference");
+                    bool isDefaultFound = false;
+                    foreach (var node in nodes2)
                     {
-                        node.Attributes["id"] = clone2.Attributes["id"];
-                        isDefaultFound = true;
+                        if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                        {
+                            node.Attributes["id"] = clone2.Attributes["id"];
+                            isDefaultFound = true;
+                        }
+                    }
+
+                    if (!isDefaultFound)
+                    {
+                        sectPrs[0].Children.Insert(0, clone2);
                     }
                 }
 
-                if (!isDefaultFound)
+                if (_context.Template.GlobalStyle.LastNoNumberingPage > 0)
                 {
-                    sectPrs[0].Children.Insert(0, clone2);
-                }
+                    //для остального документа
+                    TreeNode clone3 = referenceNode.Clone();
+                    clone3.Attributes["w:type"] = "default";
+                    clone3.Attributes["r:id"] = numberingId;
 
-                //для остального документа
-                TreeNode clone3 = referenceNode.Clone();
-                clone3.Attributes["w:type"] = "default";
-                clone3.Attributes["r:id"] = numberingId;
-
-                List<TreeNode> nodes3 = sectPrs[sectPrs.Count - 1].LongBreadthFirstSearch("w:footerReference");
-                bool isDefaultFound2 = false;
-                foreach (var node in nodes2)
-                {
-                    if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                    List<TreeNode> nodes3 = sectPrs[sectPrs.Count - 1].LongBreadthFirstSearch("w:footerReference");
+                    bool isDefaultFound2 = false;
+                    foreach (var node in nodes3)
                     {
-                        node.Attributes["id"] = clone3.Attributes["id"];
-                        isDefaultFound2 = true;
+                        if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                        {
+                            node.Attributes["id"] = clone3.Attributes["id"];
+                            isDefaultFound2 = true;
+                        }
                     }
-                }
 
-                if (!isDefaultFound)
-                {
-                    sectPrs[sectPrs.Count - 1].Children.Insert(0, clone3);
+                    if (!isDefaultFound2)
+                    {
+                        sectPrs[sectPrs.Count - 1].Children.Insert(0, clone3);
+                    }
                 }
 
                 if (_context.Template.GlobalStyle.LastNoNumberingPage != null)
@@ -326,24 +332,27 @@ namespace XMLParser.SpecialClasses.DocumentChangers
                     sectPrs[sectPrs.Count - 1].Children.Add(titelPage);
                 }
 
-                TreeNode clone2 = referenceNode.Clone();
-                clone2.Attributes["w:type"] = "default";
-                clone2.Attributes["r:id"] = numberingId;
-
-                List<TreeNode> nodes2 = sectPrs[sectPrs.Count - 1].LongBreadthFirstSearch("w:footerReference");
-                bool isDefaultFound = false;
-                foreach (var node in nodes2)
+                if (_context.Template.GlobalStyle.LastNoNumberingPage > 0)
                 {
-                    if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                    TreeNode clone2 = referenceNode.Clone();
+                    clone2.Attributes["w:type"] = "default";
+                    clone2.Attributes["r:id"] = numberingId;
+
+                    List<TreeNode> nodes2 = sectPrs[sectPrs.Count - 1].LongBreadthFirstSearch("w:footerReference");
+                    bool isDefaultFound = false;
+                    foreach (var node in nodes2)
                     {
-                        node.Attributes["id"] = clone2.Attributes["id"];
-                        isDefaultFound = true;
+                        if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
+                        {
+                            node.Attributes["id"] = clone2.Attributes["id"];
+                            isDefaultFound = true;
+                        }
                     }
-                }
 
-                if (!isDefaultFound)
-                {
-                    sectPrs[sectPrs.Count - 1].Children.Insert(0, clone2);
+                    if (!isDefaultFound)
+                    {
+                        sectPrs[sectPrs.Count - 1].Children.Insert(0, clone2);
+                    }
                 }
             }
 
