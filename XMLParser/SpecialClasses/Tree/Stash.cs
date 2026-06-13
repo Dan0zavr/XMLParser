@@ -369,5 +369,118 @@ namespace XMLParser.SpecialClasses.Tree
             matchPercent = (double)matchCount / paragraphWords.Count * 100;
             return matchPercent >= MATCH_MIN_PERCENT;
         }
+
+        public int FindLastElementIndexOfPages(Dictionary<int, List<string>> pagesWords, int[] targetPages)
+        {
+            if (targetPages == null || targetPages.Length == 0)
+                return -1;
+
+            int lastTargetPage = targetPages.Max();
+
+            if (!pagesWords.TryGetValue(lastTargetPage, out var pageWords) || pageWords.Count == 0)
+                return -1;
+
+            // 1. Создаем "плоский" поток слов документа: Слово + Индекс его корневого узла
+            var docStream = new List<(string Word, int NodeIndex)>();
+            for (int i = 0; i < _root.Children.Count; i++)
+            {
+                var nodeWords = GetNodeWords(_root.Children[i]);
+                foreach (var w in nodeWords)
+                {
+                    if (!string.IsNullOrWhiteSpace(w))
+                    {
+                        // Нормализуем слово для защиты от опечаток парсера
+                        docStream.Add((NormalizeWord(w), i));
+                    }
+                }
+            }
+
+            if (docStream.Count == 0) return -1;
+
+            // Нормализуем слова искомой страницы
+            var targetWords = pageWords
+                .Where(w => !string.IsNullOrWhiteSpace(w))
+                .Select(NormalizeWord)
+                .ToList();
+
+            // 2. Ищем "якорь" с конца страницы
+            // Берем блок из 20 слов. Если не совпало (например, из-за колонтитулов в PDF),
+            // отступаем на 10 слов назад и пробуем снова.
+            int chunkSize = Math.Min(20, targetWords.Count);
+            int step = 10;
+
+            for (int offset = 0; offset <= targetWords.Count - chunkSize; offset += step)
+            {
+                var chunk = targetWords
+                    .Skip(targetWords.Count - chunkSize - offset)
+                    .Take(chunkSize)
+                    .ToList();
+
+                int matchedNodeIndex = FindChunkInStream(docStream, chunk);
+
+                if (matchedNodeIndex != -1)
+                {
+                    return matchedNodeIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        private int FindChunkInStream(List<(string Word, int NodeIndex)> docStream, List<string> chunk)
+        {
+            // Требуем совпадения хотя бы 80% слов в окне (защита от мусора)
+            int requiredMatches = (int)(chunk.Count * 0.80);
+
+            for (int i = 0; i <= docStream.Count - chunk.Count; i++)
+            {
+                int matches = 0;
+                int lastNodeIndex = -1;
+
+                // Накладываем наш chunk на текущий отрезок документа
+                for (int j = 0; j < chunk.Count; j++)
+                {
+                    if (docStream[i + j].Word == chunk[j])
+                    {
+                        matches++;
+                        // Запоминаем узел последнего совпавшего слова
+                        lastNodeIndex = docStream[i + j].NodeIndex;
+                    }
+                }
+
+                // Если нашли сильное совпадение
+                if (matches >= requiredMatches)
+                {
+                    // Возвращаем индекс корневого узла (будь то абзац или целая таблица), 
+                    // в котором оказалось последнее слово этого блока
+                    return lastNodeIndex;
+                }
+            }
+            return -1;
+        }
+
+        private string NormalizeWord(string word)
+        {
+            // Убираем все знаки препинания и приводим к нижнему регистру.
+            // Это решает проблему, когда в PDF "слово.", а в Word "слово"
+            return new string(word.Where(c => !char.IsPunctuation(c)).ToArray()).ToLowerInvariant();
+        }
+
+        private List<string> GetNodeWords(TreeNode node)
+        {
+            List<TreeNode> textNodes = node.LongBreadthFirstSearch("w:t");
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (var t in textNodes)
+            {
+                if (t.Values.Count > 0) sb.Append(t.Values[0]).Append(' ');
+            }
+
+
+
+            return sb.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        }
     }
 }

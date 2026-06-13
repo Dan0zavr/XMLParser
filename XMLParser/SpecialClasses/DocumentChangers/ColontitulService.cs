@@ -73,22 +73,38 @@ namespace XMLParser.SpecialClasses.DocumentChangers
 
         public void AddNoNumberingSectPr(int[] targetPages)
         {
-            if (_globalStyle.LastNoNumberingPage == null) return;
-
-            Stash stash = new Stash(_context.DocumentRoot.LongBreadthFirstSearch("w:body").First());
-            List<int> sequence = stash.DetectSequences(_context.ForColontitulPagesWords.Keys.ToList()).FirstOrDefault();
-            int lastPageParagraph = stash.DetectPage(_context.ForColontitulPagesWords, sequence, targetPages)[1];
+            if (_globalStyle.LastNoNumberingPage == null)
+                return;
 
             TreeNode body = _context.DocumentRoot.LongBreadthFirstSearch("w:body").First();
 
-            TreeNode sectPr = new TreeNode
+            Stash stash = new Stash(body);
+
+            int insertIndex = stash.FindLastElementIndexOfPages(_context.ForColontitulPagesWords, targetPages);
+
+            if (insertIndex < 0)
+                return;
+
+            TreeNode p = new TreeNode
             {
-                TagName = "w:sectPr",
+                TagName = "w:p",
+                Children = {
+                    new TreeNode
+                    {
+                        TagName = "w:pPr",
+                        CloseTag = true,
+                        Children = { 
+                            new TreeNode {
+                                TagName = "w:sectPr",
+                                CloseTag = true
+                            }
+                        }
+                    }
+                },
                 CloseTag = true
             };
 
-            body.Children.Insert(lastPageParagraph, sectPr);
-
+            body.Children.Insert(insertIndex + 1, p);
         }
 
         public void ApplyFields()
@@ -193,6 +209,11 @@ namespace XMLParser.SpecialClasses.DocumentChangers
 
             if (sectPrs.Count > 1)  // если есть страницы без нумерации
             {
+                TreeNode first = sectPrs.Last();
+                TreeNode last = sectPrs.First();
+                sectPrs.Clear();
+                sectPrs.Add(first);
+                sectPrs.Add(last);
                 if (_context.Template.GlobalStyle.SpecialColontitul != null)
                 {
                     TreeNode clone = referenceNode.Clone();
@@ -244,8 +265,8 @@ namespace XMLParser.SpecialClasses.DocumentChangers
 
                 //для остального документа
                 TreeNode clone3 = referenceNode.Clone();
-                clone2.Attributes["w:type"] = "default";
-                clone2.Attributes["r:id"] = numberingId;
+                clone3.Attributes["w:type"] = "default";
+                clone3.Attributes["r:id"] = numberingId;
 
                 List<TreeNode> nodes3 = sectPrs[sectPrs.Count - 1].LongBreadthFirstSearch("w:footerReference");
                 bool isDefaultFound2 = false;
@@ -253,14 +274,14 @@ namespace XMLParser.SpecialClasses.DocumentChangers
                 {
                     if (node.Attributes.TryGetValue("w:type", out string o) && o == "default")
                     {
-                        node.Attributes["id"] = clone2.Attributes["id"];
+                        node.Attributes["id"] = clone3.Attributes["id"];
                         isDefaultFound2 = true;
                     }
                 }
 
                 if (!isDefaultFound)
                 {
-                    sectPrs[sectPrs.Count - 1].Children.Insert(0, clone2);
+                    sectPrs[sectPrs.Count - 1].Children.Insert(0, clone3);
                 }
 
                 if (_context.Template.GlobalStyle.LastNoNumberingPage != null)
@@ -349,6 +370,7 @@ namespace XMLParser.SpecialClasses.DocumentChangers
 
             XMLWrite.TreeToXMLDocument(contentTypes, contentTokens, "[Content_Types].xml", _context.TempDocumentDirectory);
         }
+
     }
 }
 

@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.4.11626.88 stable
+VisualStudioVersion = 18.4.11626.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XMLParser", "XMLParser\XMLParser.csproj", "{B2100184-9414-4C27-A9AB-B15974113481}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFReader", "..\PDFReader\PDFReader\PDFReader.csproj", "{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestIgnore", "TestIgnore\TestIgnore.csproj", "{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{737ADCAD-8E96-44FD-8FCB-9E4BE5F68F7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E6BFBC4-B7E2-EE38-0189-4DBB6C4E62FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BB1A0B48-290E-48FA-B98B-DB3D3B7780A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{737ADCAD-8E96-44FD-8FCB-9E4BE5F68F7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{737ADCAD-8E96-44FD-8FCB-9E4BE5F68F7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{737ADCAD-8E96-44FD-8FCB-9E4BE5F68F7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{737ADCAD-8E96-44FD-8FCB-9E4BE5F68F7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
