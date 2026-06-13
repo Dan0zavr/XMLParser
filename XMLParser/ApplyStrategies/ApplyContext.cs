@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
 
 namespace XMLParser.ApplyStrategies
@@ -49,8 +50,6 @@ namespace XMLParser.ApplyStrategies
                     return new UselessStrategy();
                 case StyleCategory.FormulaStyle:
                     return new ApplyFormulaStyleStrategy();
-                case StyleCategory.Global:
-                    return new ApplyGlobalStyleStrategy();
                 case StyleCategory.Useless:
                     return new UselessStrategy();
                 default:

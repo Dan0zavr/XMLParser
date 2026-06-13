@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XMLParser
+namespace XMLParser.SpecialClasses.Tree
 {
     public static class Tokenizator
     {

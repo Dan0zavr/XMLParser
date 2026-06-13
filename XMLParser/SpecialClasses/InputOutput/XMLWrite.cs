@@ -4,15 +4,16 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
 
-namespace XMLParser
+namespace XMLParser.SpecialClasses.InputOutput
 {
     public static class XMLWrite
     {
         public static void StringToXMLDocument(string text, string fileName, string tempFolder)
         {
-            string doc = Path.Combine(tempFolder, "word", fileName);
+            string doc = Path.Combine(tempFolder, fileName);
             File.WriteAllText(doc, text);
         }
 

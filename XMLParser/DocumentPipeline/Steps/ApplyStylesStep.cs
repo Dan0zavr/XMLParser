@@ -6,6 +6,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using XMLParser.ApplyStrategies;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline.Steps

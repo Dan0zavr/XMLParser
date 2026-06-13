@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using XMLParser.Styles;
 using System.Diagnostics;
 using UglyToad.PdfPig.Fonts.Encodings;
+using XMLParser.SpecialClasses.Tree;
+using XMLParser.SpecialClasses.DocumentChangers;
 
 namespace XMLParser.DocumentPipeline.Steps
 {

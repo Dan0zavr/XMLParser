@@ -12,5 +12,10 @@ namespace XMLParser.Styles
         public double RightMargin { get; set; } = 1.5;
         public double TopMargin { get; set; } = 2.0;
         public double BottomMargin { get; set; } = 2.0;
+
+        public string? SpecialColontitul = null;
+        public int? LastNoNumberingPage = null;
+        public TextStyle? NumberingTextStyle { get; set; }
+        public string Alignment { get; set; }
     }
 }

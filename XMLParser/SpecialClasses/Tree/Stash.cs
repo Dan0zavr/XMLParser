@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XMLParser
+namespace XMLParser.SpecialClasses.Tree
 {
     public class Stash
     {
@@ -28,18 +28,27 @@ namespace XMLParser
             Queue<TreeNode> paragraphs = new Queue<TreeNode>(_root.Children);
             Queue<TreeNode> newParagraphStructure = new Queue<TreeNode>();
 
-            for (int i = 0; paragraphs.Count > 0 || StashedParagraphs.Count > 0; i++)
+            int i = 0;
+
+            while (paragraphs.Count > 0 || StashedParagraphs.Count > 0)
             {
-                if (StashedParagraphs.ContainsKey(i))
+                if (StashedParagraphs.TryGetValue(i, out TreeNode stashedNode))
                 {
-                    newParagraphStructure.Enqueue(StashedParagraphs[i]);
+                    newParagraphStructure.Enqueue(stashedNode);
                     StashedParagraphs.Remove(i);
                 }
-                else
+                else if (paragraphs.Count > 0)
                 {
                     newParagraphStructure.Enqueue(paragraphs.Dequeue());
                 }
+                else
+                {
+                    break;
+                }
+
+                i++;
             }
+
             _root.Children.Clear();
 
             while (newParagraphStructure.Count > 0)
@@ -128,9 +137,13 @@ namespace XMLParser
             StashedTables = stash;
         }
 
-        private List<List<int>> DetectSequences(List<int> pages)
+        public List<List<int>> DetectSequences(List<int> pages)
         {
-            List<List<int>> sequences = new List<List<int>>();
+            List<List<int>> sequences = new();
+
+            if (pages == null || pages.Count == 0)
+                return sequences;
+
             pages.Sort();
             List<int> sequence = new List<int> { pages[0] };
 
@@ -151,7 +164,7 @@ namespace XMLParser
             return sequences;
         }
 
-        private List<int> DetectPage(Dictionary<int, List<string>> pagesWords, List<int> pagesSequence, int[] targetPages)
+        public List<int> DetectPage(Dictionary<int, List<string>> pagesWords, List<int> pagesSequence, int[] targetPages)
         {
             List<int> neighbourPages = DetectNeighbourPages(pagesSequence, targetPages);
             int startIgnoreIndex;
@@ -214,6 +227,9 @@ namespace XMLParser
                 }
             }
             List<int> trueIgnore = GetBiggestClaster(ignore);
+
+            if (trueIgnore.Count == 0) return -1;
+
             return trueIgnore.Min();
         }
 
@@ -233,6 +249,9 @@ namespace XMLParser
                 }
             }
             List<int> trueIgnore = GetBiggestClaster(ignore);
+
+            if (trueIgnore.Count == 0) return -1;
+
             return trueIgnore.Max();
         }
 
@@ -279,24 +298,25 @@ namespace XMLParser
 
         private List<int> DetectNeighbourPages(List<int> sequence, int[] targetPages)
         {
-            int leftNeighbour = -1;
-            int rightNeighbour = -1;
+            if (targetPages == null || targetPages.Length == 0)
+                return new List<int> { -1, -1 };
 
-            int minTarget = targetPages.Min();
-            int maxTarget = targetPages.Max();
+            List<int> neighbours = sequence.Except(targetPages.ToList()).ToList();
 
-            foreach (int page in sequence)
+            if (neighbours.Count == 1)
             {
-                if (page < minTarget && page > leftNeighbour)
-                    leftNeighbour = page;
-                if (page > maxTarget)
+                if (neighbours[0] > targetPages[0])
                 {
-                    rightNeighbour = page;
-                    break;
+                    int n = neighbours[0];
+                    neighbours = new List<int> { -1, n };
+                }
+                else if (neighbours[0] < targetPages[targetPages.Length - 1])
+                {
+                    int n = neighbours[0];
+                    neighbours = new List<int> { n, -1 };
                 }
             }
-
-            return new List<int> { leftNeighbour, rightNeighbour };
+            return neighbours;
         }
 
         private List<string> GetParagraphWords(TreeNode paragraph)
@@ -306,7 +326,10 @@ namespace XMLParser
             string nodeText = "";
             foreach (TreeNode node in textNodes)
             {
-                nodeText += node.Values[0];
+                if (node.Values.Count > 0)
+                {
+                    nodeText += node.Values[0];
+                }
             }
             paragraphWords = nodeText.Split(" ").ToList();
             return paragraphWords;
@@ -320,6 +343,13 @@ namespace XMLParser
             int paragraphWordIndex = 0;
             int pageWordIndex = startPageIndex;
             int lastMatchIndex = 0;
+
+            if (paragraphWords.Count == 0)
+            {
+                lastPageIndex = -1;
+                matchPercent = 0;
+                return false;
+            }
 
             while (pageWordIndex < pageWords.Count && paragraphWordIndex < paragraphWords.Count)
             {
@@ -335,7 +365,7 @@ namespace XMLParser
                     pageWordIndex++;
                 }
             }
-            lastPageIndex = lastMatchIndex - 2;
+            lastPageIndex = Math.Max(0, lastMatchIndex - 2);
             matchPercent = (double)matchCount / paragraphWords.Count * 100;
             return matchPercent >= MATCH_MIN_PERCENT;
         }

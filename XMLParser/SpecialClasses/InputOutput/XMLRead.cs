@@ -1,23 +1,23 @@
 ﻿using System.IO.Compression;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
-using static XMLParser.Tokenizator;
+using static XMLParser.SpecialClasses.Tree.Tokenizator;
 
-namespace XMLParser
+namespace XMLParser.SpecialClasses.InputOutput
 {
     public static class XMLRead
     {
-        public static (TreeNode root, List<string> specialTokens) ReadXMLDocument(string fileName, string tempFolder)
+        public static (TreeNode root, List<string> specialTokens) ReadXMLDocument(string path)
         {
             TreeNode root = new TreeNode();
-            var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString(fileName, tempFolder));
+            var (fileInTockens, specialTokens) = Tokenize(XMLDocumentFileToString(path));
             root = root.BuildTree(fileInTockens);
             return (root, specialTokens);
         }
 
-        public static string XMLDocumentFileToString(string endFile, string tempFolder)
+        public static string XMLDocumentFileToString(string path)
         {
-            string doc = Path.Combine(tempFolder, "word", endFile);
-            string list = File.ReadAllText(doc);
+            string list = File.ReadAllText(path);
             return list;
         }
 

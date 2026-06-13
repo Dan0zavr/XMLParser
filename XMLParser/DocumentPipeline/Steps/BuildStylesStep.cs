@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XMLParser.Builders;
+using XMLParser.SpecialClasses.DocumentChangers;
+using XMLParser.SpecialClasses.InputOutput;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline.Steps
@@ -16,23 +19,23 @@ namespace XMLParser.DocumentPipeline.Steps
             (var inStyles, var inNumbering) = buildDirector.BuildAllStyles(context.Template.GetStyles());
             context.Styles = inStyles.Union(inNumbering).ToDictionary(x => x.Key, y => y.Value);
 
-            XMLParser.StyleIntegrator.IntegrateStylesToTree(context.StylesRoot, inStyles.Values.ToList());
+            StyleIntegrator.IntegrateStylesToTree(context.StylesRoot, inStyles.Values.ToList());
             TreeNode paragraphStyle = inStyles[StyleCategory.ParagraphStyle];
             if (context.Template.NumberingStyle == null && File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
             {
-                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, paragraphStyle);
+                StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, paragraphStyle);
             }
             else if (File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
             {
-                XMLParser.StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, inNumbering.Values.ToList(), paragraphStyle);
+                StyleIntegrator.IntegrateNumberingStylesToTree(context.DocumentRoot, context.NumberingRoot, inNumbering.Values.ToList(), paragraphStyle);
             }
 
             if (File.Exists(Path.Combine(context.TempDocumentDirectory, "word", PiplineContext.NUMBERING)))
             {
-                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, context.TempDocumentDirectory);
+                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, Path.Combine(context.TempDocumentDirectory, "word"));
             }
 
-            XMLWrite.TreeToXMLDocument(context.StylesRoot, context.StyleSpecialTokens, PiplineContext.STYLES, context.TempDocumentDirectory);
+            XMLWrite.TreeToXMLDocument(context.StylesRoot, context.StyleSpecialTokens, PiplineContext.STYLES, Path.Combine(context.TempDocumentDirectory, "word"));
             
         }
     }

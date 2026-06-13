@@ -5,12 +5,12 @@ using XMLParser.Builders;
 using XMLParser.DocumentPipeline;
 using XMLParser.DocumentPipeline.Steps;
 using XMLParser.Styles;
-using static XMLParser.Cleaner;
-using static XMLParser.DocumentComposer;
-using static XMLParser.Tokenizator;
-using static XMLParser.TreeNode;
-using static XMLParser.XMLRead;
-using static XMLParser.XMLWrite;
+using static XMLParser.SpecialClasses.DocumentChangers.Cleaner;
+using static XMLParser.SpecialClasses.DocumentChangers.DocumentComposer;
+using static XMLParser.SpecialClasses.Tree.Tokenizator;
+using static XMLParser.SpecialClasses.Tree.TreeNode;
+using static XMLParser.SpecialClasses.InputOutput.XMLRead;
+using static XMLParser.SpecialClasses.InputOutput.XMLWrite;
 
 namespace XMLParser
 {
@@ -42,6 +42,7 @@ namespace XMLParser
                     new CleanStylesStep(),
                     new ApplyStylesStep(),
                     new UnStashStep(),
+                    new ColontitulStep(),
                     new ApplyDocumentChangesStep(),
                     new ZipStep()
                 });

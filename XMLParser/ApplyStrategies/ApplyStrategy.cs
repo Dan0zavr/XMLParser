@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static XMLParser.TreeNode;
+using static XMLParser.SpecialClasses.Tree.TreeNode;
 using XMLParser.Styles;
+using XMLParser.SpecialClasses.Tree;
 
 namespace XMLParser.ApplyStrategies
 {

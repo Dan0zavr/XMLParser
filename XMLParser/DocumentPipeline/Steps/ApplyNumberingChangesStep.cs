@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.InputOutput;
 
 namespace XMLParser.DocumentPipeline.Steps
 {
@@ -12,7 +13,7 @@ namespace XMLParser.DocumentPipeline.Steps
         {
             if (context.NumberingRoot.Children.Count > 0)
             {
-                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, context.TempDocumentDirectory);
+                XMLWrite.TreeToXMLDocument(context.NumberingRoot, context.NumberingSpecialTokens, PiplineContext.NUMBERING, Path.Combine(context.TempDocumentDirectory, "word"));
             }
         }
     }

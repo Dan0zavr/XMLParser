@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.DocumentChangers;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline.Steps

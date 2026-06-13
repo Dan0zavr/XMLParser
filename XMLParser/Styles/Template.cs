@@ -25,7 +25,6 @@ namespace XMLParser.Styles
 
             styles.Add(TextStyle, new TextStyleBuilder());
             styles.Add(ParagraphStyle, new ParagraphStyleBuilder());
-            //styles.Add(GlobalStyle, new GlobalStyleBuilder());
             if (NumberingStyle != null) styles.Add(NumberingStyle, new  NumberingStyleBuilder());
             if (TableStyle != null) styles.Add(TableStyle, new TableStyleBuilder());
             if (PictureStyle != null) styles.Add(PictureStyle, new PictureStyleBuilder());

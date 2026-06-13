@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
-using static XMLParser.TreeNode;
+using static XMLParser.SpecialClasses.Tree.TreeNode;
 
-namespace XMLParser
+namespace XMLParser.SpecialClasses.DocumentChangers
 {
     public static class CaptionAdder
     {

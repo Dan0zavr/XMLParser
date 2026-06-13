@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline
@@ -28,6 +29,7 @@ namespace XMLParser.DocumentPipeline
         public Template Template;
         public int[]? IgnorePages;
         public Dictionary<int, List<string>> PagesWords;
+        public Dictionary<int, List<string>> ForColontitulPagesWords;
         public Stash Stash;
         public Dictionary<StyleCategory, TreeNode> Styles;
     }

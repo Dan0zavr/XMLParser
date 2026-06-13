@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.DocumentChangers;
+using XMLParser.SpecialClasses.Tree;
 using XMLParser.Styles;
-using static XMLParser.TreeNode;
+using static XMLParser.SpecialClasses.Tree.TreeNode;
 
 namespace XMLParser.Builders
 {
@@ -60,13 +62,6 @@ namespace XMLParser.Builders
                     FormulaParagraphBuilder formulaBuilder = (FormulaParagraphBuilder)builder;
                     TreeNode formulaContainer = formulaBuilder.BuildStyle(formulaStyle);
                     stylesResult.Add(StyleCategory.FormulaStyle, formulaContainer);
-                }
-                else if (style is GlobalStyle)
-                {
-                    GlobalStyle globalStyle = (GlobalStyle)style;
-                    GlobalStyleBuilder globalStyleBuilder = (GlobalStyleBuilder)builder;
-                    TreeNode globalStyleContainer = globalStyleBuilder.BuildStyle(globalStyle);
-                    stylesResult.Add(StyleCategory.Global, globalStyleContainer);
                 }
                 else
                 {

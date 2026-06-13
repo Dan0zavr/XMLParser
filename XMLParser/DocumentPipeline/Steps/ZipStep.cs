@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UglyToad.PdfPig.Graphics.Operations.PathPainting;
+using XMLParser.SpecialClasses.InputOutput;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline.Steps

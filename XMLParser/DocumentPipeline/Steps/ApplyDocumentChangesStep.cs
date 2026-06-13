@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using XMLParser.SpecialClasses.InputOutput;
 using XMLParser.Styles;
 
 namespace XMLParser.DocumentPipeline.Steps
@@ -13,7 +14,7 @@ namespace XMLParser.DocumentPipeline.Steps
     {
         public void Execute(PiplineContext context)
         {
-            XMLWrite.TreeToXMLDocument(context.DocumentRoot, context.DocumentSpecialTokens, PiplineContext.DOCUMENT, context.TempDocumentDirectory);
+            XMLWrite.TreeToXMLDocument(context.DocumentRoot, context.DocumentSpecialTokens, PiplineContext.DOCUMENT, Path.Combine(context.TempDocumentDirectory, "word"));
         }
     }
 }
